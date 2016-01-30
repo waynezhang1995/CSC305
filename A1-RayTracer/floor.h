@@ -50,7 +50,7 @@ public:
             PixelColour = Add(PixelColour,PixelDiffuseColour);
         }
         if(flag == 96 ){ //top
-            Vector3 PixelDiffuseColour = MultiplyScalar(left, PlaneDiffuseTerm);
+            Vector3 PixelDiffuseColour = MultiplyScalar(Black, PlaneDiffuseTerm);
             PixelColour = Add(PixelColour,PixelDiffuseColour);
         }
         if(flag == 100){
@@ -98,7 +98,7 @@ public:
                     float NewDiscriminant2 = shadow(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light2);
                     //std::cout<<NewDiscriminant<<std::endl;
 
-                    if(NewDiscriminant > 0  ){  //intersect to one of the three spheres --> Blocked !
+                    if(NewDiscriminant > 0){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                         }
@@ -111,7 +111,7 @@ public:
                         return shade;
                     }
 
-                    if(NewDiscriminant2 > 0  ){  //intersect to one of the three spheres --> Blocked !
+                    if(NewDiscriminant2 > 0){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                         }
@@ -142,10 +142,15 @@ public:
 
             Vector3 Camera = planeintersection;      //define a new camera point = ray-plane intersection point
             Vector3 NewDirection = Minus(Light,Camera);//ray-plane intersection point to light
+            float len1 = sqrt(NewDirection.x*NewDirection.x+NewDirection.y*NewDirection.y+NewDirection.z*NewDirection.z);
             NewDirection = Normalize(NewDirection);
             Vector3 NewOC = Minus(Camera, SphereCenter);
+            float len2 = sqrt(NewOC.x*NewOC.x+NewOC.y*NewOC.y+NewOC.z*NewOC.z);
             float NewD_Dot_OC = DotProduct(NewDirection,NewOC);
             float NewOCSqure = DotProduct(NewOC,NewOC);
+            if(len2 > len1){
+                return -1;
+            }
             return (SphereRadius*SphereRadius) - NewOCSqure + NewD_Dot_OC * NewD_Dot_OC;
 
         }

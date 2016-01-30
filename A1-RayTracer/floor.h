@@ -54,8 +54,7 @@ public:
             PixelColour = Add(PixelColour,PixelDiffuseColour);
         }
         if(flag == 100){
-
-            if (blackOrWhite){
+            if (blackOrWhite== -1){
                 Vector3 PixelDiffuseColour = MultiplyScalar(White, PlaneDiffuseTerm);
                 PixelColour = Add(PixelColour,PixelDiffuseColour);
                 //SetColor(shade, PixelColour);
@@ -64,8 +63,6 @@ public:
                 PixelColour = Add(PixelColour,PixelDiffuseColour);
                 //SetColor(shade, PixelColour);
             }
-
-
         }
         return PixelColour;
     }
@@ -74,35 +71,57 @@ public:
     {
              Pixel shade;
              Vector3 PixelColour = AmbientColour;
+             int blackOrWhite = -1;
+             float result = abs((int)Surface.x/100%2);
+             float result1 = abs((int)Surface.z/100%2);
+             //std::cout << result << std::endl;
+             if(result == result1  ){
+                 blackOrWhite = 1;
+             }
+             if(Surface.x < 0 ){
+                blackOrWhite = blackOrWhite * -1;
+             }
+             if(Surface.z < 0){
+                 blackOrWhite = blackOrWhite * -1;
+             }
+             Vector3 PlaneLightVector =Minus(Light, Surface); //L
+             Vector3 PlaneLightVector2 =Minus(Light2, Surface); //L
+             PlaneLightVector = Normalize(PlaneLightVector);
+             PlaneLightVector2 = Normalize(PlaneLightVector2);
+             Vector3 tmp = Surface;
+             Surface = Normalize(Surface);
+             float PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
+             float PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
              for(int i =0;i<pObjectList.size();++i){     //calculate shadow for each sphere
                  if(pObjectList[i]->getflag() < 10){
-                    float NewDiscriminant = shadow(Surface,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light);
-                    float NewDiscriminant2 = shadow(Surface,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light2);
+                    float NewDiscriminant = shadow(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light);
+                    float NewDiscriminant2 = shadow(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light2);
                     if(NewDiscriminant > 0  ){  //intersect to one of the three spheres --> Blocked !
-                        SetColor(shade, Black);
+                        if(PlaneDiffuseTerm > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
+                        }
+
+                        if(PlaneDiffuseTerm2 > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
+                        }
+                        PixelColour = MultiplyScalar(PixelColour,0.25);
+                        SetColor(shade, PixelColour);
                         return shade;
                     }
                     if(NewDiscriminant2 > 0  ){  //intersect to one of the three spheres --> Blocked !
-                        SetColor(shade, Black);
+                        if(PlaneDiffuseTerm > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
+                        }
+
+                        if(PlaneDiffuseTerm2 > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
+                        }
+                        PixelColour = MultiplyScalar(PixelColour,0.25);
+                        SetColor(shade, PixelColour);
                         return shade;
                     }
                 }
              }
-            int blackOrWhite = 0;
-            float result = abs((int)Surface.x/150%2);
-            float result1 = abs((int)Surface.z/150%2);
-            //std::cout << result << std::endl;
-            if(result == result1 ){
-                blackOrWhite = 1;
-            }
-            Vector3 PlaneLightVector =Minus(Light, Surface); //L
-            Vector3 PlaneLightVector2 =Minus(Light2, Surface); //L
-            PlaneLightVector = Normalize(PlaneLightVector);
-            PlaneLightVector2 = Normalize(PlaneLightVector2);
-            Surface = Normalize(Surface);
-            float PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
-            float PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
-
                 if(PlaneDiffuseTerm > 0){
                     PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                 }

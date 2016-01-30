@@ -27,7 +27,7 @@ void RayTraceSphere(Image * pImage)
     Floor floorBot(Vector3(0,56,0),Vector3(0,1,0),100);
     Floor floorRight(Vector3(1300,0,0),Vector3(-1,0,0),98);
     Floor floorBack(Vector3(0,0,900),Vector3(0,0,-1),97);
-    Floor floorTop(Vector3(0,1000,0),Vector3(0,-1,0),96);
+    Floor floorTop(Vector3(0,1300,0),Vector3(0,-1,0),96);
 
     Sphere sphere(Vector3(300, 131,200), //
                   75,1);//radius
@@ -50,8 +50,8 @@ void RayTraceSphere(Image * pImage)
             //Set up the ray we're tracing: R = O + tD;
             Pixel px;
             Vector3 PixelPosition((float)i, (float)j, 0);
-			Vector3 Direction = Minus(PixelPosition, Camera);
-			Direction = Normalize(Direction);
+            Vector3 Direction = Minus(PixelPosition, Camera);
+            Direction = Normalize(Direction);
 
             float t_min = 999999;
             Vector3 Normal_min;
@@ -82,10 +82,10 @@ void RayTraceSphere(Image * pImage)
                 Vector3 Intersection = MultiplyScalar(Direction, t_min);
 				Intersection = Add(Intersection, Camera);
                 px = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),Direction,Intersection, Normal_min,pObjectList);
-			}//if t > 0
+            }//if t > 0
 			else //No Intersection, set background colour
 			{
-				SetColor(px, BackgroundColor);
+                SetColor(px, BackgroundColor);
 			}
 			 
             (*pImage)(1000-j, i) = px;  //change origin

@@ -4,7 +4,7 @@
 #include <cmath>
 #include "object.h"
 #include "common.h"
-
+#include "iostream"
 class Floor : public Object
 {
         Vector3 FloorPos;
@@ -50,7 +50,7 @@ public:
             PixelColour = Add(PixelColour,PixelDiffuseColour);
         }
         if(flag == 96 ){ //top
-            Vector3 PixelDiffuseColour = MultiplyScalar(Black, PlaneDiffuseTerm);
+            Vector3 PixelDiffuseColour = MultiplyScalar(left, PlaneDiffuseTerm);
             PixelColour = Add(PixelColour,PixelDiffuseColour);
         }
         if(flag == 100){
@@ -72,8 +72,8 @@ public:
              Pixel shade;
              Vector3 PixelColour = AmbientColour;
              int blackOrWhite = -1;
-             float result = abs((int)Surface.x/100%2);
-             float result1 = abs((int)Surface.z/100%2);
+             float result = abs((int)Surface.x/50%2);
+             float result1 = abs((int)Surface.z/50%2);
              //std::cout << result << std::endl;
              if(result == result1  ){
                  blackOrWhite = 1;
@@ -93,9 +93,11 @@ public:
              float PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
              float PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
              for(int i =0;i<pObjectList.size();++i){     //calculate shadow for each sphere
-                 if(pObjectList[i]->getflag() < 10){
+                 if(pObjectList[i]->getflag() < 10 && flag != 96){
                     float NewDiscriminant = shadow(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light);
                     float NewDiscriminant2 = shadow(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light2);
+                    //std::cout<<NewDiscriminant<<std::endl;
+
                     if(NewDiscriminant > 0  ){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
@@ -104,10 +106,11 @@ public:
                         if(PlaneDiffuseTerm2 > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
-                        PixelColour = MultiplyScalar(PixelColour,0.25);
+                        PixelColour = MultiplyScalar(PixelColour,0.125);
                         SetColor(shade, PixelColour);
                         return shade;
                     }
+
                     if(NewDiscriminant2 > 0  ){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
@@ -116,7 +119,7 @@ public:
                         if(PlaneDiffuseTerm2 > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
-                        PixelColour = MultiplyScalar(PixelColour,0.25);
+                        PixelColour = MultiplyScalar(PixelColour,0.125);
                         SetColor(shade, PixelColour);
                         return shade;
                     }

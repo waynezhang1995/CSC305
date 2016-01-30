@@ -21,17 +21,20 @@ void RayTraceSphere(Image * pImage)
      * 98 = right wall
      * 97 = back wall
      * 96 = top wall
+     *
      */
     Floor floorLeft(Vector3(-300,0,0),Vector3(1,0,0),99);
     Floor floorBot(Vector3(0,56,0),Vector3(0,1,0),100);
-    Floor floorRight(Vector3(900,0,0),Vector3(-1,0,0),98);
-    Floor floorBack(Vector3(0,0,1000),Vector3(0,0,-1),97);
-    Floor floorTop(Vector3(0,700,0),Vector3(0,-1,0),96);
+    Floor floorRight(Vector3(1300,0,0),Vector3(-1,0,0),98);
+    Floor floorBack(Vector3(0,0,900),Vector3(0,0,-1),97);
+    Floor floorTop(Vector3(0,1000,0),Vector3(0,-1,0),96);
 
-    Sphere sphere(Vector3(200, 156,300), //
-                  100,1);//radius
-    mirrorsphere sphereRefl(Vector3(500, 156, 500), //center
-                  100,2);//radius
+    Sphere sphere(Vector3(300, 131,200), //
+                  75,1);//radius
+    mirrorsphere sphereRefl(Vector3(500, 256, 500), //center
+                  200,2);//radius
+    Sphere sphere2(Vector3(700, 231, 200), //center
+                  75,1);//radius
     pObjectList.push_back(&floorLeft);
     pObjectList.push_back(&floorBot);
     pObjectList.push_back(&floorRight);
@@ -39,9 +42,10 @@ void RayTraceSphere(Image * pImage)
     pObjectList.push_back(&floorTop);
     pObjectList.push_back(&sphere);
     pObjectList.push_back(&sphereRefl);
+    pObjectList.push_back(&sphere2);
 
-    for (int i = 0; i < 700; ++ i)
-        for (int j = 0; j < 700; ++j)
+    for (int i = 0; i < 1000; ++ i)
+        for (int j = 0; j < 1000; ++j)
 		{
             //Set up the ray we're tracing: R = O + tD;
             Pixel px;
@@ -84,6 +88,6 @@ void RayTraceSphere(Image * pImage)
 				SetColor(px, BackgroundColor);
 			}
 			 
-            (*pImage)(700-j, i) = px;  //change origin
+            (*pImage)(1000-j, i) = px;  //change origin
 		}
 }

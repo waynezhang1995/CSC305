@@ -84,6 +84,6 @@ void RayTraceSphere(Image * pImage)
 				SetColor(px, BackgroundColor);
 			}
 			 
-            (*pImage)(i, 700-j) = px;  //change origin
+            (*pImage)(700-j, i) = px;  //change origin
 		}
 }

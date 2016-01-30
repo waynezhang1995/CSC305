@@ -4,7 +4,7 @@
 
 int main(int, char**){
 
-    Image image(700, 700);
+    Image image(1000, 1000);
     //RayTrace(&image);     //old version
     RayTraceSphere(&image);
     image.show(" CSC 305 RayTracer Demo ");

@@ -23,33 +23,25 @@ void RayTraceSphere(Image * pImage)
      * 96 = top wall
      *
      */
-    Floor floorLeft(Vector3(-300,0,0),Vector3(1,0,0),99);
-    Floor floorBot(Vector3(0,0,0),Vector3(0,1,0),100);
-    Floor floorRight(Vector3(1300,0,0),Vector3(-1,0,0),98);
-    Floor floorBack(Vector3(0,0,900),Vector3(0,0,-1),97);
-    Floor floorTop(Vector3(0,1300,0),Vector3(0,-1,0),96);
-
     Sphere sphere(Vector3(300, 75,200), //
                   75,1);//radius
-    mirrorsphere sphereRefl(Vector3(500, 200, 500), //center
+    mirrorsphere sphereRefl(Vector3(500, 200, 700), //center
                   200,2);//radius
     Sphere sphere2(Vector3(700, 75, 200), //center
                   75,1);//radius
-    triangle BotLeft(Vector3(0,0,1000),Vector3(1000,0,0),Vector3(0,0,0),100);
-    triangle BotRight(Vector3(1000,0,1000),Vector3(1000,0,0),Vector3(0,0,1000),100);
+    triangle BotLeft(Vector3(0,0,1070),Vector3(1000,0,0),Vector3(-70,0,0),100);
+    triangle BotRight(Vector3(1070,0,1000),Vector3(1000,0,-70),Vector3(0,0,1000),100);
 
-    triangle TopLeft(Vector3(0,1000,1000),Vector3(1000,1000,0),Vector3(0,1000,0),96);
-    triangle TopRight(Vector3(1000,1000,1000),Vector3(1000,1000,0),Vector3(0,1000,1000),96);
+    triangle TopLeft(Vector3(-70,1000,1000),Vector3(1070,1000,0),Vector3(0,1000,0),96);
+    triangle TopRight(Vector3(1070,1000,1000),Vector3(1070,1000,0),Vector3(-70,1000,1000),96);
 
-
-
-    triangle LeftLeft(Vector3(0,0,0),Vector3(0,1000,0),Vector3(0,1000,1000),99);
+    triangle LeftLeft(Vector3(0,-70,0),Vector3(0,1000,0),Vector3(0,1000,1070),99);
     triangle LeftRight(Vector3(0,0,0),Vector3(0,0,1000),Vector3(0,1000,1000),99);
 
-    triangle BackLeft(Vector3(0,0,1000),Vector3(1000,0,1000),Vector3(0,1000,1000),97);
+    triangle BackLeft(Vector3(0,0,1000),Vector3(1050,0,1000),Vector3(0,1050,1000),97);
     triangle BackRight(Vector3(0,1000,1000),Vector3(1000,0,1000),Vector3(1000,1000,1000),97);
 
-    triangle RightLeft(Vector3(1000,0,0),Vector3(1000,1000,0),Vector3(1000,1000,1000),98);
+    triangle RightLeft(Vector3(1000,-70,0),Vector3(1000,1000,0),Vector3(1000,1000,1070),98);
     triangle RightRight(Vector3(1000,0,0),Vector3(1000,0,1000),Vector3(1000,1000,1000),98);
 
     pObjectList.push_back(&BotLeft);

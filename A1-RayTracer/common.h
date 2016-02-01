@@ -16,6 +16,7 @@ Vector3 Add(Vector3 a, Vector3 b) {	return Vector3(a.x + b.x, a.y + b.y, a.z + b
 Vector3 Minus(Vector3 a, Vector3 b) { return Vector3(a.x - b.x, a.y - b.y, a.z - b.z); }
 Vector3 MultiplyScalar(Vector3 a, float b) { return Vector3(a.x * b, a.y * b, a.z * b); }
 float DotProduct(Vector3 a, Vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+Vector3 CrossProduct(Vector3 a,Vector3 b){return Vector3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);}
 Vector3 Normalize(Vector3 a)
 {
     float length = a.x * a.x + a.y * a.y + a.z * a.z;
@@ -39,16 +40,24 @@ void SetColor(Pixel & px, Vector3 CalculatedColor)
     px.A = 255;
 }
 
+
+
 Vector3 AmbientColour(20, 20, 20);
 Vector3 DiffuseColour(124, 250, 250);
 Vector3 BackgroundColor(8, 8, 8);
-Vector3 Light(900,900,0);
-Vector3 Light2(0,900,0);  //define second light source
-Vector3 Camera(500,500, -500);
+Vector3 Light(500,500,0);
+Vector3 Light2(500,500,0);  //define second light source
+Vector3 Camera(500,500, -600);
 Vector3 SpecularColourSphere(255,255,255);
 Vector3 White(255,255,255);
 Vector3 Black(0,0,0);
 Vector3 yellow(135,135,135);
-Vector3 left(173,255,47);
+Vector3 left(107,142,35);
 Vector3 right(240,230,140);
 Vector3 back(135,135,135);
+Vector3 top(245,245,200);
+
+//Vector3 Vertax1(0, 0,0);
+//Vector3 Vertax2(1000,0,0);
+//Vector3 Vertax100(-1200,0,1000);
+

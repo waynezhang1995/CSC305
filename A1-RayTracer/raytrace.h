@@ -6,7 +6,7 @@
 #include "floor.h"
 #include "mirrorsphere.h"
 #include <iostream>
-
+#include "triangle.h"
 void RayTraceSphere(Image * pImage)
 {
     std::vector<Object *> pObjectList;
@@ -24,22 +24,46 @@ void RayTraceSphere(Image * pImage)
      *
      */
     Floor floorLeft(Vector3(-300,0,0),Vector3(1,0,0),99);
-    Floor floorBot(Vector3(0,56,0),Vector3(0,1,0),100);
+    Floor floorBot(Vector3(0,0,0),Vector3(0,1,0),100);
     Floor floorRight(Vector3(1300,0,0),Vector3(-1,0,0),98);
     Floor floorBack(Vector3(0,0,900),Vector3(0,0,-1),97);
     Floor floorTop(Vector3(0,1300,0),Vector3(0,-1,0),96);
 
-    Sphere sphere(Vector3(300, 131,200), //
+    Sphere sphere(Vector3(300, 75,200), //
                   75,1);//radius
-    mirrorsphere sphereRefl(Vector3(500, 256, 500), //center
+    mirrorsphere sphereRefl(Vector3(500, 200, 500), //center
                   200,2);//radius
-    Sphere sphere2(Vector3(700, 231, 200), //center
+    Sphere sphere2(Vector3(700, 75, 200), //center
                   75,1);//radius
-    pObjectList.push_back(&floorLeft);
-    pObjectList.push_back(&floorBot);
-    pObjectList.push_back(&floorRight);
-    pObjectList.push_back(&floorBack);
-    pObjectList.push_back(&floorTop);
+    triangle BotLeft(Vector3(0,0,1000),Vector3(1000,0,0),Vector3(0,0,0),100);
+    triangle BotRight(Vector3(1000,0,1000),Vector3(1000,0,0),Vector3(0,0,1000),100);
+
+    triangle TopLeft(Vector3(0,1000,1000),Vector3(1000,1000,0),Vector3(0,1000,0),96);
+    triangle TopRight(Vector3(1000,1000,1000),Vector3(1000,1000,0),Vector3(0,1000,1000),96);
+
+
+
+    triangle LeftLeft(Vector3(0,0,0),Vector3(0,1000,0),Vector3(0,1000,1000),99);
+    triangle LeftRight(Vector3(0,0,0),Vector3(0,0,1000),Vector3(0,1000,1000),99);
+
+    triangle BackLeft(Vector3(0,0,1000),Vector3(1000,0,1000),Vector3(0,1000,1000),97);
+    triangle BackRight(Vector3(0,1000,1000),Vector3(1000,0,1000),Vector3(1000,1000,1000),97);
+
+    triangle RightLeft(Vector3(1000,0,0),Vector3(1000,1000,0),Vector3(1000,1000,1000),98);
+    triangle RightRight(Vector3(1000,0,0),Vector3(1000,0,1000),Vector3(1000,1000,1000),98);
+
+    pObjectList.push_back(&BotLeft);
+    pObjectList.push_back(&BotRight);
+    pObjectList.push_back(&TopLeft);
+    pObjectList.push_back(&TopRight);
+    pObjectList.push_back(&LeftLeft);
+    pObjectList.push_back(&LeftRight);
+    pObjectList.push_back(&BackLeft);
+    pObjectList.push_back(&BackRight);
+
+    pObjectList.push_back(&RightLeft);
+    pObjectList.push_back(&RightRight);
+
     pObjectList.push_back(&sphere);
     pObjectList.push_back(&sphereRefl);
     pObjectList.push_back(&sphere2);
@@ -78,10 +102,13 @@ void RayTraceSphere(Image * pImage)
             }
 
             if (HasIntersection)
-			{              
+            {
+
                 Vector3 Intersection = MultiplyScalar(Direction, t_min);
 				Intersection = Add(Intersection, Camera);
                 px = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),Direction,Intersection, Normal_min,pObjectList);
+
+
             }//if t > 0
 			else //No Intersection, set background colour
 			{

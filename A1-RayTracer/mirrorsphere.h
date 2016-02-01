@@ -59,7 +59,7 @@ public:
         int index = 0;
         bool HasIntersection = false;
         float t_min = 999999;
-         Vector3 Normal_min;
+        Vector3 Normal_min;
         Vector3 priRayDir = Direction;
         priRayDir = MultiplyScalar(priRayDir,-1);
         Vector3 SecondaryRay = MultiplyScalar(Normal,2 * DotProduct(Normal,priRayDir));
@@ -88,7 +88,6 @@ public:
         {
             Vector3 Intersection = MultiplyScalar(SecondaryRay, t_min);
             Intersection = Add(Intersection, Surface);
-            //std::cout << index << std::endl;
             shade = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
         }//if t > 0
 
@@ -96,7 +95,6 @@ public:
         {
             SetColor(shade, BackgroundColor);
         }
-
 
         return shade;
     }

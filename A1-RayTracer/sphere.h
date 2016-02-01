@@ -17,6 +17,7 @@ public:
     virtual Vector3 getCenter(){return Center;}
     virtual float getRadius(){return Radius;}
     virtual int getflag() {return flag;}
+
     virtual bool Intersect(Vector3 Origin, Vector3 Direction,
                            float *t_out, Vector3 *normal_out)
     {

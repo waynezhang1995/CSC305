@@ -61,8 +61,9 @@ public:
         float t_min = 999999;
         Vector3 Normal_min;
         Vector3 priRayDir = Direction;
-        priRayDir = MultiplyScalar(priRayDir,-1);
-        Vector3 SecondaryRay = MultiplyScalar(Normal,2 * DotProduct(Normal,priRayDir));
+        //priRayDir = MultiplyScalar(priRayDir,-1);
+        Vector3 SecondaryRay = MultiplyScalar(Normal,2 * -DotProduct(Normal,priRayDir));
+        SecondaryRay = Add(SecondaryRay,priRayDir);
         SecondaryRay = Normalize(SecondaryRay); //new direction
 
         for(int i =0;i<pObjectList.size();++i){

@@ -1,3 +1,6 @@
+
+
+
 /* YuWei(Wayne) Zhang*/
 
 #include "Canvas.h"
@@ -143,12 +146,13 @@ void OnTimer()
 }
 
 int main(int, char **){
+    /*
     SquareVertices.push_back(Vector2(0.5,0.5));
     SquareVertices.push_back(Vector2(0.5,-0.5));
     SquareVertices.push_back(Vector2(-0.5,-0.5));
     SquareVertices.push_back(Vector2(-0.5,0.5));
     SquareVertices.push_back(Vector2(0.5,0.5));
-
+     */
     //Link the call backs
 
     //canvas.SetMouseMove(MouseMove);

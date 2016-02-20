@@ -7,7 +7,8 @@ unsigned int height = 1024;
 float vppos_x = 0;
 float vppos_y = 0;
 bool leftButtonPressed = false;
-float linelength = 0.5;
+float linelength = 0.1;
+float linelength2 = 0.2;
 int timercount = 0;
 Canvas canvas;
 int aftervalue = 0;
@@ -52,9 +53,11 @@ void KeyPress(char keychar)
     //A key is pressed! print a message
     fprintf(stderr, "The \"%c\" key is pressed!\n", keychar);
     if(keychar == 'S') {
-       rotateSpeed = 2.0;
+       linelength =  linelength + 0.01;
+       linelength2 =  linelength2 + 0.02;
     }else if(keychar == 'A'){
-       rotateSpeed = 0.1;
+       linelength = linelength - 0.01;
+       linelength2 = linelength2 - 0.02;
     }else{
       if(keychar == ' ') rotateCW = !rotateCW;
     }
@@ -73,13 +76,27 @@ void DrawCross(float x_center, float y_center)
                    y_center - linelength);
 }
 
-void DrawSquare(float x_center, float y_center)
+void DrawSquare1(float x_center, float y_center)
 {
     //-0.25  -0.25
+    //canvas.AddLine(x_center-linelength);
     canvas.AddLine(x_center - linelength, y_center - linelength, x_center - linelength, y_center + linelength);
     canvas.AddLine(x_center - linelength, y_center + linelength, x_center + linelength, y_center + linelength);
     canvas.AddLine(x_center + linelength, y_center + linelength, x_center + linelength, y_center - linelength);
     canvas.AddLine(x_center + linelength, y_center - linelength, x_center - linelength, y_center - linelength);
+}
+void DrawSquare2(float x_center, float y_center)
+{
+    //-0.25  -0.25
+    //canvas.AddLine(x_center-linelength);
+    canvas.AddLine(x_center - linelength2, y_center - linelength2, x_center - linelength2, y_center + linelength2);
+    canvas.AddLine(x_center - linelength2, y_center + linelength2, x_center + linelength2, y_center + linelength2);
+    canvas.AddLine(x_center + linelength2, y_center + linelength2, x_center + linelength2, y_center - linelength2);
+    canvas.AddLine(x_center + linelength2, y_center - linelength2, x_center - linelength2, y_center - linelength2);
+    canvas.AddLine(x_center - linelength,  y_center + linelength,x_center - linelength2,y_center+linelength2);
+    canvas.AddLine(x_center + linelength,y_center+linelength,x_center+linelength2,y_center+linelength2);
+    canvas.AddLine(x_center - linelength,y_center-linelength,x_center-linelength2,y_center-linelength2);
+    canvas.AddLine(x_center + linelength,y_center-linelength,x_center+linelength2,y_center-linelength2);
 }
 
 void OnPaint()
@@ -89,7 +106,10 @@ void OnPaint()
 
     //if (leftButtonPressed == true)
     //{
-        DrawSquare(vppos_x, vppos_y);
+    DrawSquare1(0,0);
+    DrawSquare2(0,0);
+    //DrawSquare(-0.125+linelength,-0.125+linelength);
+       // DrawSquare(vppos_x, vppos_y);
     //}
     //DrawSquare(vppos_x, vppos_y);
     /*
@@ -113,6 +133,7 @@ void OnPaint()
 void OnTimer()
 {
     linelength = (float)(sin(timercount / 10.0) * 0.1 + 0.1);
+    linelength2 = (float)(sin(timercount / 10.0) * 0.1 + 0.1);
     timercount ++;
 
     if(rotateCW) rotateAngle -= rotateSpeed;
@@ -131,22 +152,10 @@ int main(int, char **){
     //canvas.SetMouseMove(MouseMove);
     //canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
-    //canvas.SetOnPaint(OnPaint);
-    canvas.SetTimer(0.1, OnTimer);//trigger OnTimer every 0.1 second
+    canvas.SetOnPaint(OnPaint);
+    //canvas.SetTimer(0.1, OnTimer);//trigger OnTimer every 0.1 second
     //Show Window
 
-    DrawSquare(-0.25+aftervalue,-0.25+aftervalue);
-    DrawSquare(0.25+aftervalue,0.25+aftervalue);
-    canvas.AddLine(-0.75+aftervalue,0.25+aftervalue,-0.25+aftervalue,0.75+aftervalue);
-    canvas.AddLine(0.25+aftervalue,0.25+aftervalue,0.75+aftervalue,0.75+aftervalue);
-    canvas.AddLine(-0.75+aftervalue,-0.75+aftervalue,-0.25+aftervalue,-0.25+aftervalue);
-    canvas.AddLine(0.25+aftervalue,-0.75+aftervalue,0.75+aftervalue,-0.25+aftervalue);
-
-    //canvas.AddLine(-0.75,-0.75,);
-    //canvas.AddLine(x_center - linelength, y_center + linelength, x_center + linelength, y_center + linelength);
-    //canvas.AddLine(x_center + linelength, y_center + linelength, x_center + linelength, y_center - linelength);
-    //canvas.AddLine(x_center + linelength, y_center - linelength, x_center - linelength, y_center - linelength);
-    //AddLine(float x_start, float y_start, float x_end, float y_end)
 
 
     //DrawSquare(0,0.5);

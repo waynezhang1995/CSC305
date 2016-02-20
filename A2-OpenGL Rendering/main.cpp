@@ -1,3 +1,5 @@
+/* YuWei(Wayne) Zhang*/
+
 #include "Canvas.h"
 #include <math.h>
 

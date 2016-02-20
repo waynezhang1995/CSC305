@@ -92,8 +92,7 @@ void DrawSquare1(float x_center, float y_center)
 }
 void DrawSquare2(float x_center, float y_center)
 {
-    //-0.25  -0.25
-    //canvas.AddLine(x_center-linelength);
+   
     canvas.AddLine(x_center - linelength2, y_center - linelength2, x_center - linelength2, y_center + linelength2);
     canvas.AddLine(x_center - linelength2, y_center + linelength2, x_center + linelength2, y_center + linelength2);
     canvas.AddLine(x_center + linelength2, y_center + linelength2, x_center + linelength2, y_center - linelength2);

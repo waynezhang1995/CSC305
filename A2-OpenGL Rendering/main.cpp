@@ -1,8 +1,13 @@
 #include "Canvas.h"
 #include <math.h>
+#include "Eigen/Dense"
+#include <iostream>
 
-unsigned int width = 1024;
-unsigned int height = 1024;
+using namespace Eigen;
+using namespace std;
+
+unsigned int width = 512;
+unsigned int height = 512;
 
 float vppos_x = 0;
 float vppos_y = 0;
@@ -14,22 +19,17 @@ Canvas canvas;
 bool rotateCW = true; //Whether we're rotating in the clockwise direction
 float rotateAngle = 0; //The angle the square currently rotated
 float rotateAngle1 = 0; //The angle the square currently rotated
-float rotateSpeed = 0.05; //The speed of the rotation
+float rotateSpeed = 0.01; //The speed of the rotation
 float lastx = vppos_x;
 float lasty = vppos_y;
-struct Vector4
-{
-    float x, y, z, w;
-    Vector4() { x = y = z = w =  0; }
-    Vector4(float x_in, float y_in,float z_in,float w_in)
-    {
-    x = x_in;
-    y = y_in;
-    z = z_in;
-    w = w_in;
-    }
-};
 
+Matrix4f perspective;           //perspective matrix
+Matrix4f viewrot;                  //view matrix
+Matrix4f view;
+Matrix4f viewtmp;
+float camerax = 0;
+float cameray = 0;
+float cameraz = 5;
 
 void MouseMove(double x, double y)
 {
@@ -47,7 +47,7 @@ void MouseMove(double x, double y)
             rotateAngle -= rotateSpeed;
         }*/
 
-        rotateAngle1 += rotateSpeed * -dx;
+        rotateAngle += rotateSpeed * -dx;
 
         /*
         if(lasty < vppos_y){
@@ -56,7 +56,7 @@ void MouseMove(double x, double y)
            rotateAngle1 -= rotateSpeed;
        }*/
 
-        rotateAngle += rotateSpeed * -dy;
+        rotateAngle1 += rotateSpeed * -dy;
    }
 }
 
@@ -81,116 +81,89 @@ void KeyPress(char keychar)
     //A key is pressed! print a message
     fprintf(stderr, "The \"%c\" key is pressed!\n", keychar);
     if (keychar == ' ') rotateCW = !rotateCW;
-
-
-}
-
-void DrawCross(float x_center, float y_center)
-{
-    canvas.AddLine(x_center - linelength,
-                   y_center - linelength,
-                   x_center + linelength,
-                   y_center + linelength);
-
-    canvas.AddLine(x_center - linelength,
-                   y_center + linelength,
-                   x_center + linelength,
-                   y_center - linelength);
-}
-
-void DrawSquare(float x_center, float y_center)
-{
-    canvas.AddLine(x_center - linelength, y_center - linelength, x_center - linelength, y_center + linelength);
-    canvas.AddLine(x_center - linelength, y_center + linelength, x_center + linelength, y_center + linelength);
-    canvas.AddLine(x_center + linelength, y_center + linelength, x_center + linelength, y_center - linelength);
-    canvas.AddLine(x_center + linelength, y_center - linelength, x_center - linelength, y_center - linelength);
 }
 
 void OnPaint()
 {
-    canvas.Clear();
     /*
-    DrawCross(vppos_x, vppos_y);
+     * n = 1
+     * f = 100
+     *
+     *
+     */
 
-    if (leftButtonPressed == true)
-    {
-        DrawSquare(vppos_x, vppos_y);
-    }
-    */
-    std::vector<Vector4> vecBuffer;
-    vecBuffer.push_back(Vector4(0.5,0.5,0.5,1)); //front topright
-    vecBuffer.push_back(Vector4(-0.5,0.5,0.5,1)); //front topleft
-    vecBuffer.push_back(Vector4(-0.5,-0.5,0.5,1)); //front bottomleft
-    vecBuffer.push_back(Vector4(0.5,-0.5,0.5,1));  //front bottomright
+    canvas.Clear();
+    perspective<<1,0,0,0,
+                 0,1,0,0,
+                 0,0,-6.0/4,-(2.0*5)/4,
+                 0,0,-1,0;
+    //cout<<rotateAngle<<endl;
+    Vector3f EysPos(1.5*sin(rotateAngle),1.5*sin(rotateAngle1),1.5*cos(rotateAngle));       //0,0,4 initially
+    Vector3f ViewUp(0,1,0);
+    Vector3f GazeDir(0,0,0);
+    Vector3f W = -(GazeDir-EysPos).normalized();
+    Vector3f U =(ViewUp.cross(W)).normalized();
+    Vector3f V = W.cross(U);
+    //cout<<U<<endl;
+    viewtmp<<1,0,0,-EysPos.x(),
+             0,1,0,-EysPos.y(),
+             0,0,1,-EysPos.z(),
+             0,0,0,1;
 
-    vecBuffer.push_back(Vector4(0.5,0.5,-0.5,1));
-    vecBuffer.push_back(Vector4(-0.5,0.5,-0.5,1));
-    vecBuffer.push_back(Vector4(-0.5,-0.5,-0.5,1));
-    vecBuffer.push_back(Vector4(0.5,-0.5,-0.5,1));
+    viewrot<<U.x(),U.y(),U.z(),0,
+             V.x(),V.y(),V.z(),0,
+             W.x(),W.y(),W.z(),0,
+             0,0,0,1;
+    //cout<<rotateAngle<<endl;
+    view = viewrot*viewtmp;
+    //cout<<view<<endl;
+    std::vector<Vector4f> vecBuffer;
+    vecBuffer.push_back(Vector4f(0.5,0.5,0.5,1)); //front topright
+    vecBuffer.push_back(Vector4f(-0.5,0.5,0.5,1)); //front topleft
+    vecBuffer.push_back(Vector4f(-0.5,-0.5,0.5,1)); //front bottomleft
+    vecBuffer.push_back(Vector4f(0.5,-0.5,0.5,1));  //front bottomright
 
-
+    vecBuffer.push_back(Vector4f(0.5,0.5,-0.5,1));
+    vecBuffer.push_back(Vector4f(-0.5,0.5,-0.5,1));
+    vecBuffer.push_back(Vector4f(-0.5,-0.5,-0.5,1));
+    vecBuffer.push_back(Vector4f(0.5,-0.5,-0.5,1));
+        //V*P*vertices
         for(int i =0;i<8;i++){
-            Vector4 afterrotate;
-            afterrotate.x = vecBuffer[i].x;
-            afterrotate.y = vecBuffer[i].y*cos(rotateAngle) - vecBuffer[i].z*sin(rotateAngle);
-            afterrotate.z = vecBuffer[i].y*sin(rotateAngle) + vecBuffer[i].z*cos(rotateAngle);
-            vecBuffer[i] = afterrotate;
+            vecBuffer[i] = view*vecBuffer[i];
+            vecBuffer[i].x() = vecBuffer[i].x()*1.0/vecBuffer[i].z();
+            vecBuffer[i].y() = vecBuffer[i].y()*1.0/vecBuffer[i].z();
+            vecBuffer[i].z() = 1.0+10-10*1/vecBuffer[i].z();
+            vecBuffer[i].w() = 1.0;
+            //cout<<vecBuffer[i]<<endl;
         }
-
-        for(int i =0;i<8;i++){
-            Vector4 afterrotate;
-            afterrotate.x = vecBuffer[i].x*cos(rotateAngle1) + vecBuffer[i].z*sin(rotateAngle1);
-            afterrotate.y = vecBuffer[i].y;
-            afterrotate.z = vecBuffer[i].x*(-sin(rotateAngle1)) + vecBuffer[i].z*cos(rotateAngle1);
-            vecBuffer[i] = afterrotate;
-        }
-
+    //draw line
     for(int i =0;i<3;i++){
-         canvas.AddLine(vecBuffer[i].x, vecBuffer[i].y, vecBuffer[i+1].x, vecBuffer[i+1].y);
+         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
     }
-         canvas.AddLine(vecBuffer[0].x, vecBuffer[0].y, vecBuffer[3].x, vecBuffer[3].y);
+         canvas.AddLine(vecBuffer[0].x(), vecBuffer[0].y(), vecBuffer[3].x(), vecBuffer[3].y());
 
     for(int i =4;i<7;i++){
-         canvas.AddLine(vecBuffer[i].x, vecBuffer[i].y, vecBuffer[i+1].x, vecBuffer[i+1].y);
+         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
     }
-         canvas.AddLine(vecBuffer[4].x, vecBuffer[4].y, vecBuffer[7].x, vecBuffer[7].y);
+         canvas.AddLine(vecBuffer[4].x(), vecBuffer[4].y(), vecBuffer[7].x(), vecBuffer[7].y());
     for(int i =0;i<4;i++){
-         canvas.AddLine(vecBuffer[i].x, vecBuffer[i].y, vecBuffer[i+4].x, vecBuffer[i+4].y);
+         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+4].x(), vecBuffer[i+4].y());
     }
-
-
 }
 
 void OnTimer()
 {
-
-
-    if(leftButtonPressed == true){
     if (rotateCW) rotateAngle -= rotateSpeed;
         else rotateAngle += rotateSpeed;
-    }
-    if(rightButtonPressed == true){
-    if (rotateCW) rotateAngle1 -= rotateSpeed;
-        else rotateAngle1 += rotateSpeed;
-    }
-
-
 }
 
 int main(int, char **){
 
-
-
-
-
-    //Link the call backs
     canvas.SetMouseMove(MouseMove);
     canvas.SetMouseButton(MouseButton);
-    canvas.SetKeyPress(KeyPress);
+    //canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
     //canvas.SetTimer(0.1, OnTimer);//trigger OnTimer every 0.1 second
-    //Show Window
-
     canvas.Show(width, height, "Canvas Demo");
     return 0;
 }

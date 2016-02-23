@@ -1,3 +1,15 @@
+##Author: YuWei(Wayne) Zhang
+
+An implementation of an interactive wireframe rendering of a cube.
+
+Basic operation: 
+
+1.press the left mouse button down and move the cursor left and right,the camera should rotate around the centre of                     the object. When you press down the left  mouse button and move the cursor up and down, the camera rotates up and                     down
+
+ 2.When press down the right mouse button and move the cursor up and down, the camera moves closer and further away                      from the cube
+ 
+ More details in A2 spec.
+
 ## ImageKit Update 1
 This project implements teaching frameworks for an introductory computer graphics course.
 

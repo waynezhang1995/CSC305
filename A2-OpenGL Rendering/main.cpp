@@ -129,18 +129,20 @@ void OnPaint()
             vecBuffer[i] = perspective * vecBuffer[i];
         }
     //draw line
-    for(int i =0;i<3;i++){
-         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
-    }
-         canvas.AddLine(vecBuffer[0].x(), vecBuffer[0].y(), vecBuffer[3].x(), vecBuffer[3].y());
+        if(dis <= 50 && dis >=1){
+            for(int i =0;i<3;i++){
+                 canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
+            }
+                 canvas.AddLine(vecBuffer[0].x(), vecBuffer[0].y(), vecBuffer[3].x(), vecBuffer[3].y());
 
-    for(int i =4;i<7;i++){
-         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
-    }
-         canvas.AddLine(vecBuffer[4].x(), vecBuffer[4].y(), vecBuffer[7].x(), vecBuffer[7].y());
-    for(int i =0;i<4;i++){
-         canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+4].x(), vecBuffer[i+4].y());
-    }
+            for(int i =4;i<7;i++){
+                 canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+1].x(), vecBuffer[i+1].y());
+            }
+                 canvas.AddLine(vecBuffer[4].x(), vecBuffer[4].y(), vecBuffer[7].x(), vecBuffer[7].y());
+            for(int i =0;i<4;i++){
+                 canvas.AddLine(vecBuffer[i].x(), vecBuffer[i].y(), vecBuffer[i+4].x(), vecBuffer[i+4].y());
+            }
+        }
 }
 
 void OnTimer()

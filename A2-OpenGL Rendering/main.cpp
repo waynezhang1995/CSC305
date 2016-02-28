@@ -5,61 +5,50 @@
 
 using namespace Eigen;
 using namespace std;
-
+/* 1024 X 1204 */
 unsigned int width = 1024;
 unsigned int height = 1024;
 
-float vppos_x = 0;
-float vppos_y = 0;
-bool leftButtonPressed = false;
-bool rightButtonPressed = false;
-float linelength = 0;
-int timercount = 0;
+float vppos_x = 0;//cursor position; x coordinate
+float vppos_y = 0;//cursor position; y coordinate
+bool leftButtonPressed = false;//whether left button is pressed
+bool rightButtonPressed = false;//whether right button is pressed
 Canvas canvas;
 bool rotateCW = true; //Whether we're rotating in the clockwise direction
-float rotateAngle = 0 ; //The angle the square currently rotated
-float rotateAngle1 = M_PI * 0.5; //The angle the square currently rotated
+float rotateAngle = 0 ; //The angle the camera currently rotated
+                        //The angle between cube center and camera in a spherical coordinate
+float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float rotateSpeed = 0.05; //The speed of the rotation
-float lastx = vppos_x;
-float lasty = vppos_y;
-float dis = 2.0;
-Matrix4f perspective;           //perspective matrix
-Matrix4f viewrot;                  //view matrix
-Matrix4f view;
-Matrix4f viewtmp;
-float camerax = 0;
-float cameray = 0;
-float cameraz = 5;
+float lastx = vppos_x;//last cursor position; x coordinate
+float lasty = vppos_y;//last cursor position; y coordiante
+float dis = 2.0;//initail distance between camera and cube
+Matrix4f perspective;//Mp
+Matrix4f viewrot;//Mrot
+Matrix4f view;//Mv
+Matrix4f viewtmp;/*
+                  * 1 0 0 −xe
+                  * 0 1 0 −ye
+                  * 0 0 1 −ze
+                  * 0 0 0 1
+                  */
+float camerax = 0;//camera postion; x
+float cameray = 0;//camera postion; y
+float cameraz = 5;//camera postion; z
 
 void MouseMove(double x, double y)
 {
    //the pointer has moved
    vppos_x = (float)(x) / 256 - 1;
    vppos_y = 1 - (float)(y) / 256;
-   float dx = vppos_x- lastx;
-   float dy = vppos_y- lasty;
+   float dx = vppos_x- lastx;//record the last cursor postion x
+   float dy = vppos_y- lasty;//record the last cursor postion y
 
-   if(leftButtonPressed == true){
-       /*
-        if(lastx < vppos_x){
-            rotateAngle += rotateSpeed;
-        }else if(lastx > vppos_x){
-            rotateAngle -= rotateSpeed;
-        }*/
-
-        rotateAngle += rotateSpeed * -dx;
-
-        /*
-        if(lasty < vppos_y){
-        rotateAngle1 += rotateSpeed;
-       }else if(lasty > vppos_y){
-           rotateAngle1 -= rotateSpeed;
-       }*/
-
-        rotateAngle1 += rotateSpeed * -dy;
+   if(leftButtonPressed == true){//left button
+        rotateAngle += rotateSpeed * -dx;//rotate camera left or right (dx > 0 --> right; dx < 0 --> left )
+        rotateAngle1 += rotateSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
    }
-   if(rightButtonPressed == true){
-        dis += dy*0.01;
+   if(rightButtonPressed == true){//right button
+        dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
    }
 }
 
@@ -78,6 +67,7 @@ void MouseButton(MouseButtons mouseButton, bool press)
     }
 }
 
+/*
 void KeyPress(char keychar)
 {
     //A key is pressed! print a message
@@ -85,21 +75,18 @@ void KeyPress(char keychar)
     if (keychar == 'S') rotateAngle += rotateSpeed ;
     if (keychar == 'A') rotateAngle1 += rotateSpeed;
 }
+*/
 
+/* draw square */
 void OnPaint()
 {
-    /*
-     * n = 1
-     * f = 100
-     *
-     *
-     */
+    canvas.Clear();//clear the canvas. draw new frame
+    /* move camera in a spherical coordinate system*/
+    Vector3f EysPos(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));//0,0,5 initially
+    Vector3f ViewUp(0,1,0);//up vector in Mv
+    Vector3f GazeDir(0,0,0);//gaze vector in Mv
 
-    canvas.Clear();
-    //cout<<rotateAngle<<endl;
-    Vector3f EysPos(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));       //0,0,4 initially
-    Vector3f ViewUp(0,1,0);
-    Vector3f GazeDir(0,0,0);
+    /*Derive a coordinate system with origin e and uvw basis*/
     Vector3f W = -(GazeDir-EysPos).normalized();
     Vector3f U =(ViewUp.cross(W)).normalized();
     Vector3f V = W.cross(U);
@@ -131,7 +118,7 @@ void OnPaint()
 
             perspective<<1/vecBuffer[i].z(),0,0,0,
                          0,1/vecBuffer[i].z(),0,0,
-                         0,0,0,1+50-50/vecBuffer[i].z(),
+                         0,0,1+50-50/vecBuffer[i].z(),0,
                          0,0,0,1;
             /*
             vecBuffer[i].x() = vecBuffer[i].x()*1.0/vecBuffer[i].z();
@@ -166,7 +153,7 @@ int main(int, char **){
 
     canvas.SetMouseMove(MouseMove);
     canvas.SetMouseButton(MouseButton);
-    canvas.SetKeyPress(KeyPress);
+    //canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
     //canvas.SetTimer(0.1, OnTimer);//trigger OnTimer every 0.1 second
     canvas.Show(width, height, "Canvas Demo");

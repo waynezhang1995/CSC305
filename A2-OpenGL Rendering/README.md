@@ -11,7 +11,7 @@ Basic operation:
  
  More details in A2-part1 spec.
  
- ##---------------------------------------------------------------------------------------------
+##Part 2
 
 ## ImageKit Update 1
 This project implements teaching frameworks for an introductory computer graphics course.

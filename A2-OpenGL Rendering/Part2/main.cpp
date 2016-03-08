@@ -1,11 +1,12 @@
 #include "Canvas.h"
 #include <math.h>
 #include "Eigen/Dense"
-
+#include <iostream>
 unsigned int width = 1024;
 unsigned int height = 1024;
 
 using namespace Eigen;
+using namespace std;
 
 Canvas canvas;
 Matrix4f view;
@@ -16,17 +17,24 @@ Matrix4f viewtmp;
 const char * vshader_square = "\
 #version 330 core \n \
 in vec3 vpoint;\
-uniform float rotation;\
+uniform vec4 vicol0;\
+uniform vec4 vicol1;\
+uniform vec4 vicol2;\
+uniform vec4 vicol3;\
 \
-mat4 RotationMatrix(float rot){\
-mat3 R = mat3(1);\
-R[0][0] = cos(rot);\
-R[0][1] = sin(rot);\
-R[1][0] = -sin(rot);\
-R[1][1] = cos(rot);\
-return mat4(R);}\
+void RotationMatrix(vec4 first,vec4 second,vec4 third, vec4 forth){\
+    vec4 point = vec4(vpoint,1);\
+    point = vi * point;\
+    mat4 pes;\
+    pes[0] = vec4(1/point.z,0,0,0);\
+    pes[1] = vec4(0,1/point.z,0,0);\
+    pes[2] = vec4(0,0,1+50-50/point.z,0);\
+    pes[3] = vec4(0,0,0,1);\
+    point = pes * point;\
+    gl_Position = point;\
+}\
 void main(){\
-gl_Position = vec4(vpoint,1);}";
+RotationMatrix(vi);}";
 
 const char * fshader_square = "\
 #version 330 core \n \
@@ -74,13 +82,19 @@ const GLfloat vpoint[]={
 
 };
 
-float RotationAngle = 0;
-float RotationAngle2 = 0;
+float rotateAngle = 0 ; //The angle the camera currently rotated
+                        //The angle between cube center and camera in a spherical coordinate
+float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float RotatingSpeed = 0.02;
 
 GLuint VertexArrayID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint RotationID = 0;
+GLuint ViewIDcol0 = 0;
+GLuint ViewIDcol1 = 0;
+GLuint ViewIDcol2 = 0;
+GLuint ViewIDcol3 = 0;
+
 
 float camerax = 0;//camera postion; x
 float cameray = 0;//camera postion; y
@@ -103,7 +117,10 @@ void InitializeGL()
     GLuint vpoint_id = glGetAttribLocation(ProgramID,"vpoint");
     glEnableVertexAttribArray(vpoint_id);
     glVertexAttribPointer(vpoint_id,3,GL_FLOAT,false,0,0);
-    RotationID = glGetUniformLocation(ProgramID,"rotation");
+    ViewIDcol0 = glGetUniformLocation(ProgramID,"vicol0");
+    ViewIDcol1 = glGetUniformLocation(ProgramID,"vicol1");
+    ViewIDcol2 = glGetUniformLocation(ProgramID,"vicol2");
+    ViewIDcol3 = glGetUniformLocation(ProgramID,"vicol3");
 }
 
 void MouseMove(double x, double y)
@@ -124,9 +141,11 @@ void KeyPress(char keychar)
 void OnPaint()
 {
        glClear(GL_COLOR_BUFFER_BIT);
-       Vector3f EysPos(dis*sin(RotationAngle2)*sin(RotationAngle),dis*cos(RotationAngle2),dis*sin(RotationAngle2)*cos(RotationAngle));//0,0,5 initially
+       Vector3f EysPos(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));//0,0,5 initially
        Vector3f ViewUp(0,1,0);//up vector in Mv
        Vector3f GazeDir(0,0,0);//gaze vector in Mv
+
+       /*Derive a coordinate system with origin e and uvw basis*/
        Vector3f W = -(GazeDir-EysPos).normalized();
        Vector3f U =(ViewUp.cross(W)).normalized();
        Vector3f V = W.cross(U);
@@ -141,17 +160,21 @@ void OnPaint()
                 W.x(),W.y(),W.z(),0,
                 0,0,0,1;
 
-       view = viewrot*viewtmp;
+        view = viewrot*viewtmp;
     //context
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
-    glUniform1f(RotationID,RotationAngle);
+    glUniform4f(ViewIDcol0,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
+    glUniform4f(ViewIDcol1,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
+    glUniform4f(ViewIDcol2,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
+    glUniform4f(ViewIDcol3,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
+    //glUniform4f(ViewIDcol0,);
     //glUniform1f(RotationID,RotationAngle2);       //how to deal with second angle
     /*
      * if leftbutton pressed --> RotationAngle
      * if rightbutton pressed --> RotationAngle2
      */
-    glDrawArrays(GL_TRIANGLES,0,12*3);//12 triangles each one has 3 vertices
+    glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
     glUseProgram(0);
     glBindVertexArray(0);
 
@@ -159,7 +182,7 @@ void OnPaint()
 
 void OnTimer()
 {
-    RotationAngle += RotatingSpeed;
+    rotateAngle += RotatingSpeed;
 }
 
 int main(int, char **){
@@ -168,7 +191,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    canvas.SetTimer(0.05, OnTimer);
+    //canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

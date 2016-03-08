@@ -1,5 +1,6 @@
 ##Author: YuWei(Wayne) Zhang
 
+##Part 1:
 An implementation of an interactive wireframe rendering of a cube.
 
 Basic operation: 
@@ -8,7 +9,9 @@ Basic operation:
 
  2.When press down the right mouse button and move the cursor up and down, the camera moves closer and further away                      from the cube
  
- More details in A2 spec.
+ More details in A2-part1 spec.
+ 
+ ##---------------------------------------------------------------------------------------------
 
 ## ImageKit Update 1
 This project implements teaching frameworks for an introductory computer graphics course.

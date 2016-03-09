@@ -2,39 +2,52 @@
 #include <math.h>
 #include "Eigen/Dense"
 #include <iostream>
-unsigned int width = 1024;
-unsigned int height = 1024;
+
+unsigned int width = 512;
+unsigned int height = 512;
 
 using namespace Eigen;
 using namespace std;
 
 Canvas canvas;
-Matrix4f view;
-Matrix4f perspective;
-Matrix4f viewrot;
-Matrix4f viewtmp;
 
 const char * vshader_square = "\
 #version 330 core \n \
 in vec3 vpoint;\
-uniform vec4 vicol0;\
-uniform vec4 vicol1;\
-uniform vec4 vicol2;\
-uniform vec4 vicol3;\
+uniform float dis;\
+uniform float rotateAngle;\
+uniform float rotateAngle1;\
 \
-void RotationMatrix(vec4 first,vec4 second,vec4 third, vec4 forth){\
+void RotationMatrix(float dis, float rotateAngle, float rotateAngle1){\
+   vec3 EysPos = vec3(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));\
+   vec3 ViewUp = vec3(0,1,0);\
+   vec3 GazeDir = vec3(0,0,0);\
+   vec3 W = normalize(-(GazeDir-EysPos));\
+   vec3 U = normalize(cross(ViewUp,W));\
+   vec3 V = cross(W,U);\
+    mat4 viewtemp;\
+    viewtemp[0] = vec4(1,0,0,0);\
+    viewtemp[1] = vec4(0,1,0,0);\
+    viewtemp[2] = vec4(0,0,1,0);\
+    viewtemp[3] = vec4(-EysPos.x,-EysPos.y,-EysPos.z,1);\
+    mat4 viewrot;\
+    viewrot[0] = vec4(U.x,V.x,W.x,0);\
+    viewrot[1] = vec4(U.y,V.y,W.y,0);\
+    viewrot[2] = vec4(U.z,V.z,W.z,0);\
+    viewrot[3] = vec4(0,0,0,1);\
+    mat4 view;\
+    view = viewrot * viewtemp;\
     vec4 point = vec4(vpoint,1);\
-    point = vi * point;\
+    vec4 result = view * point;\
     mat4 pes;\
-    pes[0] = vec4(1/point.z,0,0,0);\
-    pes[1] = vec4(0,1/point.z,0,0);\
-    pes[2] = vec4(0,0,1+50-50/point.z,0);\
+    pes[0] = vec4(1/result.z,0,0,0);\
+    pes[1] = vec4(0,1/result.z,0,0);\
+    pes[2] = vec4(0,0,1+50-50/result.z,0);\
     pes[3] = vec4(0,0,0,1);\
-    point = pes * point;\
-    gl_Position = point;\
+    gl_Position = pes * result;\
 }\
 void main(){\
-RotationMatrix(vi);}";
+RotationMatrix(dis,rotateAngle,rotateAngle1);}";
 
 const char * fshader_square = "\
 #version 330 core \n \
@@ -48,7 +61,6 @@ const GLfloat vpoint[]={
          0.5f, 0.5f,-0.5f, // triangle 2 : begin
         -0.5f,-0.5f,-0.5f,
         -0.5f, 0.5f,-0.5f, // triangle 2 : end
-
          0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f,-0.5f,
          0.5f,-0.5f,-0.5f,
@@ -90,15 +102,9 @@ float RotatingSpeed = 0.02;
 GLuint VertexArrayID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint RotationID = 0;
-GLuint ViewIDcol0 = 0;
-GLuint ViewIDcol1 = 0;
-GLuint ViewIDcol2 = 0;
-GLuint ViewIDcol3 = 0;
+GLuint RotationID1 = 0;
+GLuint disID = 0;
 
-
-float camerax = 0;//camera postion; x
-float cameray = 0;//camera postion; y
-float cameraz = 5;//camera postion; z
 float dis = 2.0;
 
 void InitializeGL()
@@ -116,11 +122,12 @@ void InitializeGL()
     glUseProgram(ProgramID);
     GLuint vpoint_id = glGetAttribLocation(ProgramID,"vpoint");
     glEnableVertexAttribArray(vpoint_id);
+
     glVertexAttribPointer(vpoint_id,3,GL_FLOAT,false,0,0);
-    ViewIDcol0 = glGetUniformLocation(ProgramID,"vicol0");
-    ViewIDcol1 = glGetUniformLocation(ProgramID,"vicol1");
-    ViewIDcol2 = glGetUniformLocation(ProgramID,"vicol2");
-    ViewIDcol3 = glGetUniformLocation(ProgramID,"vicol3");
+    disID = glGetUniformLocation(ProgramID,"dis");
+    RotationID = glGetUniformLocation(ProgramID,"rotateAngle");
+    RotationID1 = glGetUniformLocation(ProgramID,"rotateAngle1");
+
 }
 
 void MouseMove(double x, double y)
@@ -141,34 +148,14 @@ void KeyPress(char keychar)
 void OnPaint()
 {
        glClear(GL_COLOR_BUFFER_BIT);
-       Vector3f EysPos(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));//0,0,5 initially
-       Vector3f ViewUp(0,1,0);//up vector in Mv
-       Vector3f GazeDir(0,0,0);//gaze vector in Mv
 
-       /*Derive a coordinate system with origin e and uvw basis*/
-       Vector3f W = -(GazeDir-EysPos).normalized();
-       Vector3f U =(ViewUp.cross(W)).normalized();
-       Vector3f V = W.cross(U);
-
-       viewtmp<<1,0,0,-EysPos.x(),
-                0,1,0,-EysPos.y(),
-                0,0,1,-EysPos.z(),
-                0,0,0,1;
-
-       viewrot<<U.x(),U.y(),U.z(),0,
-                V.x(),V.y(),V.z(),0,
-                W.x(),W.y(),W.z(),0,
-                0,0,0,1;
-
-        view = viewrot*viewtmp;
-    //context
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
-    glUniform4f(ViewIDcol0,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
-    glUniform4f(ViewIDcol1,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
-    glUniform4f(ViewIDcol2,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
-    glUniform4f(ViewIDcol3,view.col(0).x(),view.col(0).y(),view.col(0).z(),view.col(0).w());
-    //glUniform4f(ViewIDcol0,);
+    glUniform1f(RotationID,rotateAngle);
+    glUniform1f(RotationID1,rotateAngle1);
+    glUniform1f(disID,dis);
+
+
     //glUniform1f(RotationID,RotationAngle2);       //how to deal with second angle
     /*
      * if leftbutton pressed --> RotationAngle
@@ -191,7 +178,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    //canvas.SetTimer(0.05, OnTimer);
+    canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

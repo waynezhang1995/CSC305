@@ -102,6 +102,13 @@ void OnPaint()
              0,0,0,1;
 
     view = viewrot*viewtmp;
+
+    perspective<<1,0,0,0,
+                 0,1,0,0,
+                 0,0,1+50/1,-50,
+                 0,0,1/1,0;
+    Matrix4f Mvp = perspective * view;
+
     std::vector<Vector4f> vecBuffer;
     vecBuffer.push_back(Vector4f(0.5,0.5,0.5,1)); //front topright
     vecBuffer.push_back(Vector4f(-0.5,0.5,0.5,1)); //front topleft
@@ -114,19 +121,8 @@ void OnPaint()
     vecBuffer.push_back(Vector4f(0.5,-0.5,-0.5,1));
         //V*P*vertices
         for(int i =0;i<8;i++){
-            vecBuffer[i] = view*vecBuffer[i];
-
-            perspective<<1/vecBuffer[i].z(),0,0,0,
-                         0,1/vecBuffer[i].z(),0,0,
-                         0,0,1+50-50/vecBuffer[i].z(),0,
-                         0,0,0,1;
-            /*
-            vecBuffer[i].x() = vecBuffer[i].x()*1.0/vecBuffer[i].z();
-            vecBuffer[i].y() = vecBuffer[i].y()*1.0/vecBuffer[i].z();
-            vecBuffer[i].z() = 1.0+50-50*1/vecBuffer[i].z();
-            vecBuffer[i].w() = 1.0;
-            */
-            vecBuffer[i] = perspective * vecBuffer[i];
+            Vector4f temp = Mvp * vecBuffer[i];
+            vecBuffer[i] = temp / temp.w();
         }
     //draw line
         if(dis <= 50 && dis >=1){

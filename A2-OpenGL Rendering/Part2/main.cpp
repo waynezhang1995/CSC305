@@ -2,6 +2,7 @@
  * Author: YuWei(Wayne) Zhang
  * V00805647
  */
+
 #include "Canvas.h"
 #include <math.h>
 #include "Eigen/Dense"
@@ -24,62 +25,138 @@ float lasty = vppos_y;//last cursor position; y coordiante
 
 //take inverse transpose
 const char * vshader_square = "\
-#version 330 core \n \
-in vec3 vpoint;\
-uniform mat4 UseMvp;\
-\
-void RotationMatrix(mat4 UseMvp){\
-    vec4 temp = UseMvp * vec4(vpoint,1);\
-    gl_Position = temp ;\
-}\
-void main(){\
-RotationMatrix(UseMvp);}";
+    #version 330 core \n \
+    in vec3 vpoint;\
+    in vec3 npoint;\
+    out vec4 fnormal;\
+    out vec4 interPoint;\
+    uniform mat4 UseMvp;\
+    \
+    void RotationMatrix(mat4 UseMvp){\
+        vec4 temp = UseMvp * vec4(vpoint,1);\
+        gl_Position = temp ;\
+        interPoint = temp;\
+        fnormal = inverse((transpose(UseMvp))) * vec4(npoint,1);\
+    }\
+    void main(){\
+    RotationMatrix(UseMvp);}";
 
 const char * fshader_square = "\
-#version 330 core \n \
-out vec3 color;\
-void main(){color = vec3(0,45,2);}";
+    #version 330 core \n \
+    out vec3 color;\
+    in vec4 fnormal;\
+    in vec4 interPoint;\
+    uniform mat4 UseMvp;\
+    void main(){\
+    vec4 LightPos = vec4(1.0f,1.0f,0,1.0f);\
+    vec4 Lp = UseMvp * LightPos;\
+    vec4 LightDir = normalize(Lp - interPoint);\
+    float diffuseterm = dot(LightDir,normalize(fnormal));\
+    if(diffuseterm > 0){\
+        color = vec3(1.0f,1.0f,1.0f) * diffuseterm ;\
+    }\
+    }";
 
 const GLfloat vpoint[]={
-
+        //#1
         -0.5f,-0.5f,-0.5f, // triangle 1 : beg
         -0.5f,-0.5f, 0.5f,
         -0.5f, 0.5f, 0.5f, // triangle 1 : end
+        //#2
          0.5f, 0.5f,-0.5f, // triangle 2 : begin
         -0.5f,-0.5f,-0.5f,
         -0.5f, 0.5f,-0.5f, // triangle 2 : end
+        //#3
          0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f,-0.5f,
          0.5f,-0.5f,-0.5f,
+        //#4
          0.5f, 0.5f,-0.5f,
          0.5f,-0.5f,-0.5f,
         -0.5f,-0.5f,-0.5f,
+        //#5
         -0.5f,-0.5f,-0.5f,
         -0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f,-0.5f,
+        //#6
          0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f,-0.5f,
+        //#7
         -0.5f, 0.5f, 0.5f,
         -0.5f,-0.5f, 0.5f,
          0.5f,-0.5f, 0.5f,
+        //#8
          0.5f, 0.5f, 0.5f,
          0.5f,-0.5f,-0.5f,
          0.5f, 0.5f,-0.5f,
+        //#9
          0.5f,-0.5f,-0.5f,
          0.5f, 0.5f, 0.5f,
          0.5f,-0.5f, 0.5f,
+        //#10
          0.5f, 0.5f, 0.5f,
          0.5f, 0.5f,-0.5f,
         -0.5f, 0.5f,-0.5f,
+        //#11
          0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f,-0.5f,
         -0.5f, 0.5f, 0.5f,
+        //#12
          0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f, 0.5f,
          0.5f,-0.5f, 0.5f
+};
 
-
+const GLfloat npoint[]={
+        //#1
+        -1.0f,0,0,
+        -1.0f,0,0,
+        -1.0f,0,0,
+        //#2
+        0,0,-1.0f,
+        0,0,-1.0f,
+        0,0,-1.0f,
+        //#3
+        0,-1.0f,0,
+        0,-1.0f,0,
+        0,-1.0f,0,
+        //#4
+        0,0,-1.0f,
+        0,0,-1.0f,
+        0,0,-1.0f,
+        //#5
+        -1.0f,0,0,
+        -1.0f,0,0,
+        -1.0f,0,0,
+        //#6
+        0,-1.0f,0,
+        0,-1.0f,0,
+        0,-1.0f,0,
+        //#7
+        0,0,1.0f,
+        0,0,1.0f,
+        0,0,1.0f,
+        //#8
+        1.0f,0,0,
+        1.0f,0,0,
+        1.0f,0,0,
+        //#9
+        1.0f,0,0,
+        1.0f,0,0,
+        1.0f,0,0,
+        //#10
+        0,1.0f,0,
+        0,1.0f,0,
+        0,1.0f,0,
+        //#11
+        0,1.0f,0,
+        0,1.0f,0,
+        0,1.0f,0,
+        //#12
+        0,0,1.0f,
+        0,0,1.0f,
+        0,0,1.0f,
 };
 
 float rotateAngle = 0 ; //The angle the camera currently rotated
@@ -101,19 +178,25 @@ void InitializeGL()
     glBindVertexArray(VertexArrayID);
 
     //Vertex Buffer Object
-    GLuint vertexBufferID;
-    glGenBuffers(1,&vertexBufferID);    //actually contains the vertices of square
-    glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
     ProgramID = compile_shaders(vshader_square,fshader_square);
     glUseProgram(ProgramID);
+    MvpID = glGetUniformLocation(ProgramID,"UseMvp");
+    GLuint vertexBufferID;
+    GLuint normalBufferID;
+    glGenBuffers(1,&vertexBufferID);    //actually contains the vertices of square
+    glGenBuffers(1,&normalBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
     GLuint vpoint_id = glGetAttribLocation(ProgramID,"vpoint");
     glEnableVertexAttribArray(vpoint_id);
-
     glVertexAttribPointer(vpoint_id,3,GL_FLOAT,false,0,0);
-    MvpID = glGetUniformLocation(ProgramID,"UseMvp");
 
 
+    glBindBuffer(GL_ARRAY_BUFFER,normalBufferID);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(npoint),npoint,GL_STATIC_DRAW);
+    GLuint npoint_id = glGetAttribLocation(ProgramID,"npoint");
+    glEnableVertexAttribArray(npoint_id);
+    glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
 }
 
 void MouseMove(double x, double y)
@@ -157,9 +240,9 @@ void OnPaint()
     Matrix4f Mvp;
     Matrix4f viewtmp;
     Matrix4f viewrot;
-    Matrix4f view;
-    Matrix4f Orth;
-    Matrix4f perspective;
+    Matrix4f view;  //Mv
+    Matrix4f Orth;  //Mo
+    Matrix4f perspective;//Mp
     Vector3f EysPos(dis*sin(rotateAngle1)*sin(rotateAngle),dis*cos(rotateAngle1),dis*sin(rotateAngle1)*cos(rotateAngle));//0,0,5 initially
     Vector3f ViewUp(0,1,0);//up vector in Mv
     Vector3f GazeDir(0,0,0);//gaze vector in Mv
@@ -193,9 +276,9 @@ void OnPaint()
 
     Mvp = Orth * perspective * view;
     /*******************End**********************/
-    cout<<Mvp<<endl;
+    //cout<<Mvp<<endl;
 
-    glClear(GL_COLOR_BUFFER_BIT);
+
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
     glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
@@ -203,6 +286,10 @@ void OnPaint()
      * if leftbutton pressed --> RotationAngle
      * if rightbutton pressed --> RotationAngle2
      */
+    //glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_LESS);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
     glUseProgram(0);
     glBindVertexArray(0);
@@ -220,7 +307,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    //canvas.SetTimer(0.05, OnTimer);
+    canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

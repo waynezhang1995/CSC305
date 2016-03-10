@@ -18,6 +18,7 @@ bool rightButtonPressed = false;//whether right button is pressed
 float lastx = vppos_x;//last cursor position; x coordinate
 float lasty = vppos_y;//last cursor position; y coordiante
 
+//take inverse transpose
 const char * vshader_square = "\
 #version 330 core \n \
 in vec3 vpoint;\

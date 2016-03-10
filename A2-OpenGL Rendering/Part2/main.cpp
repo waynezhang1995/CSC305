@@ -1,3 +1,7 @@
+/*
+ * Author: YuWei(Wayne) Zhang
+ * V00805647
+ */
 #include "Canvas.h"
 #include <math.h>
 #include "Eigen/Dense"

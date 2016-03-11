@@ -65,22 +65,22 @@ const GLfloat vpoint[]={
         -0.5f,-0.5f,-0.5f, // triangle 1 : beg
         -0.5f,-0.5f, 0.5f,
         -0.5f, 0.5f, 0.5f, // triangle 1 : end
+        //#5
+        -0.5f,-0.5f,-0.5f,
+        -0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f,-0.5f,
         //#2
          0.5f, 0.5f,-0.5f, // triangle 2 : begin
         -0.5f,-0.5f,-0.5f,
         -0.5f, 0.5f,-0.5f, // triangle 2 : end
-        //#3
-         0.5f,-0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,
-         0.5f,-0.5f,-0.5f,
         //#4
          0.5f, 0.5f,-0.5f,
          0.5f,-0.5f,-0.5f,
         -0.5f,-0.5f,-0.5f,
-        //#5
+        //#3
+         0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f,-0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f,-0.5f,
+         0.5f,-0.5f,-0.5f,
         //#6
          0.5f,-0.5f, 0.5f,
         -0.5f,-0.5f, 0.5f,
@@ -88,6 +88,10 @@ const GLfloat vpoint[]={
         //#7
         -0.5f, 0.5f, 0.5f,
         -0.5f,-0.5f, 0.5f,
+         0.5f,-0.5f, 0.5f,
+        //#12
+         0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f,
          0.5f,-0.5f, 0.5f,
         //#8
          0.5f, 0.5f, 0.5f,
@@ -105,38 +109,35 @@ const GLfloat vpoint[]={
          0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f,-0.5f,
         -0.5f, 0.5f, 0.5f,
-        //#12
-         0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f
+
 };
 
 const GLfloat npoint[]={
-        //#1
+        //#1.
         -1.0f,0,0,
         -1.0f,0,0,
         -1.0f,0,0,
-        //#2
+        //#2.
         0,0,-1.0f,
         0,0,-1.0f,
         0,0,-1.0f,
-        //#3
+        //#3.
         0,-1.0f,0,
         0,-1.0f,0,
         0,-1.0f,0,
-        //#4
+        //#4.
         0,0,-1.0f,
         0,0,-1.0f,
         0,0,-1.0f,
-        //#5
+        //#5.
         -1.0f,0,0,
         -1.0f,0,0,
         -1.0f,0,0,
-        //#6
+        //#6.
         0,-1.0f,0,
         0,-1.0f,0,
         0,-1.0f,0,
-        //#7
+        //#7.
         0,0,1.0f,
         0,0,1.0f,
         0,0,1.0f,
@@ -156,19 +157,55 @@ const GLfloat npoint[]={
         0,1.0f,0,
         0,1.0f,0,
         0,1.0f,0,
-        //#12
+        //#12.
         0,0,1.0f,
         0,0,1.0f,
         0,0,1.0f,
 };
 
 const GLfloat vtexcoord[] = {
- 0, 1,
- 1, 1,
- 0, 0, //upper half of the square
- 1, 1,
- 1, 0,
- 0, 0}; //lower half of the square
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+
+    0, 1,
+    1, 1,
+    0, 0, //upper half of the square
+    1, 1,
+    1, 0,
+    0, 0,
+}; //lower half of the square
 
 float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
@@ -210,7 +247,7 @@ void InitializeGL()
     glEnableVertexAttribArray(npoint_id);
     glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
 
-    Texture teximage = LoadPNGTexture("texture.png");
+    Texture teximage = LoadPNGTexture("texture1.png");
     GLuint texobject;
     glGenTextures(1, &texobject);
     glBindTexture(GL_TEXTURE_2D, texobject);
@@ -236,10 +273,6 @@ void InitializeGL()
     glEnableVertexAttribArray(texcoordBindingPosition);
     glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
     GL_FALSE, 0, (void *)0);
-
-    //glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
-    //glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
-
     //glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

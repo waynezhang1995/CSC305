@@ -7,9 +7,7 @@
 #include <math.h>
 #include "Eigen/Dense"
 #include <iostream>
-#include "png.h"
-#include "pngconf.h"
-#include "pnglibconf.h"
+
 unsigned int width = 512;
 unsigned int height = 512;
 

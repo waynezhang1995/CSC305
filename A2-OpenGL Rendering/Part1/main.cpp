@@ -1,3 +1,7 @@
+/*
+ * Author: YuWei(Wayne) Zhang
+ * V00805647
+ */
 #include "Canvas.h"
 #include <math.h>
 #include "Eigen/Dense"
@@ -6,8 +10,8 @@
 using namespace Eigen;
 using namespace std;
 /* 1024 X 1204 */
-unsigned int width = 1024;
-unsigned int height = 1024;
+unsigned int width = 512;
+unsigned int height = 512;
 
 float vppos_x = 0;//cursor position; x coordinate
 float vppos_y = 0;//cursor position; y coordinate
@@ -31,6 +35,7 @@ Matrix4f viewtmp;/*
                   * 0 0 1 −ze
                   * 0 0 0 1
                   */
+Matrix4f Orth;
 float camerax = 0;//camera postion; x
 float cameray = 0;//camera postion; y
 float cameraz = 5;//camera postion; z
@@ -101,7 +106,19 @@ void OnPaint()
              W.x(),W.y(),W.z(),0,
              0,0,0,1;
 
+    Orth<<1,0,0,0,
+          0,1,0,0,
+          0,0,2/(-1-(-50)),-(-1-50)/(-1+50),
+          0,0,0,1;
+
     view = viewrot*viewtmp;
+
+    perspective<<1,0,0,0,
+                 0,1,0,0,
+                 0,0,-1-50/-1,50,
+                 0,0,1/-1,0;
+    Matrix4f Mvp = Orth * perspective * view;
+    cout<<Mvp<<endl;
     std::vector<Vector4f> vecBuffer;
     vecBuffer.push_back(Vector4f(0.5,0.5,0.5,1)); //front topright
     vecBuffer.push_back(Vector4f(-0.5,0.5,0.5,1)); //front topleft
@@ -114,19 +131,8 @@ void OnPaint()
     vecBuffer.push_back(Vector4f(0.5,-0.5,-0.5,1));
         //V*P*vertices
         for(int i =0;i<8;i++){
-            vecBuffer[i] = view*vecBuffer[i];
-
-            perspective<<1/vecBuffer[i].z(),0,0,0,
-                         0,1/vecBuffer[i].z(),0,0,
-                         0,0,1+50-50/vecBuffer[i].z(),0,
-                         0,0,0,1;
-            /*
-            vecBuffer[i].x() = vecBuffer[i].x()*1.0/vecBuffer[i].z();
-            vecBuffer[i].y() = vecBuffer[i].y()*1.0/vecBuffer[i].z();
-            vecBuffer[i].z() = 1.0+50-50*1/vecBuffer[i].z();
-            vecBuffer[i].w() = 1.0;
-            */
-            vecBuffer[i] = perspective * vecBuffer[i];
+            Vector4f temp = Mvp * vecBuffer[i];
+            vecBuffer[i] = temp / temp.w();
         }
     //draw line
         if(dis <= 50 && dis >=1){

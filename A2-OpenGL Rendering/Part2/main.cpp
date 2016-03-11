@@ -7,9 +7,11 @@
 #include <math.h>
 #include "Eigen/Dense"
 #include <iostream>
-
-unsigned int width = 1024;
-unsigned int height = 1024;
+#include "png.h"
+#include "pngconf.h"
+#include "pnglibconf.h"
+unsigned int width = 512;
+unsigned int height = 512;
 
 using namespace Eigen;
 using namespace std;
@@ -48,12 +50,16 @@ const char * fshader_square = "\
     in vec4 interPoint;\
     uniform mat4 UseMvp;\
     void main(){\
-    vec3 LightPos = vec3(1.0f,1.0f,1.0f);\
+    vec3 LightPos = vec3(0,0,1.0f);\
     vec4 Lp = UseMvp *vec4(LightPos,1);\
     vec4 LightDir = normalize(Lp - interPoint );\
     vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
+    vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
+    vec3 R = normalize(tmp - LightDir.xyz);\
+    float rv = max(0.0f,dot(R,normalize(-(interPoint.xyz))));\
+    float specular = pow(rv,100);\
     float diffuseterm = max(dot(LightDir,n),0.0);\
-        color = vec3(0.3f,0,0) + vec3(1.0f,0,0) * diffuseterm;\
+        color = vec3(0.3f,0,0) + vec3(1.0f,0,0) * diffuseterm + vec3(1.0f,1.0f,1.0f) * specular;\
     }";
 
 const GLfloat vpoint[]={
@@ -158,6 +164,14 @@ const GLfloat npoint[]={
         0,0,1.0f,
 };
 
+const GLfloat vtexcoord[] = {
+ 0, 1,
+ 1, 1,
+ 0, 0, //upper half of the square
+ 1, 1,
+ 1, 0,
+ 0, 0}; //lower half of the square
+
 float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
 float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
@@ -166,6 +180,8 @@ float RotatingSpeed = 0.02;
 GLuint VertexArrayID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
+
+//GLuint loadBMP_custom(const char * imagepath)
 
 
 float dis = 2.0;
@@ -190,12 +206,38 @@ void InitializeGL()
     glEnableVertexAttribArray(vpoint_id);
     glVertexAttribPointer(vpoint_id,3,GL_FLOAT,false,0,0);
 
-
     glBindBuffer(GL_ARRAY_BUFFER,normalBufferID);
     glBufferData(GL_ARRAY_BUFFER,sizeof(npoint),npoint,GL_DYNAMIC_DRAW);
     GLuint npoint_id = glGetAttribLocation(ProgramID,"npoint");
     glEnableVertexAttribArray(npoint_id);
     glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
+
+    Texture teximage = LoadPNGTexture("texture.png");
+    GLuint texobject;
+    glGenTextures(1, &texobject);
+    glBindTexture(GL_TEXTURE_2D, texobject);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximage.width,
+    teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    teximage.dataptr);
+
+    GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
+    glUniform1i(tex_bindingpoint, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texobject);
+    GLuint texcoordbuffer;
+    glGenBuffers(1, &texcoordbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, texcoordbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vtexcoord), vtexcoord,
+    GL_STATIC_DRAW);
+    GLuint texcoordBindingPosition = glGetAttribLocation(ProgramID,
+    "vtexcoord");
+    glEnableVertexAttribArray(texcoordBindingPosition);
+    glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
+    GL_FALSE, 0, (void *)0);
 
     //glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
     //glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
@@ -204,6 +246,12 @@ void InitializeGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
+
+
+
+
+
+
 
 }
 
@@ -216,7 +264,7 @@ void MouseMove(double x, double y)
 
     if(leftButtonPressed == true){//left button
          rotateAngle += RotatingSpeed * -dx;//rotate camera left or right (dx > 0 --> right; dx < 0 --> left )
-         rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
+         //rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
     }
     if(rightButtonPressed == true){//right button
          dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
@@ -307,16 +355,18 @@ void OnPaint()
 
 void OnTimer()
 {
-    rotateAngle1 += RotatingSpeed;
+    rotateAngle += RotatingSpeed;
 }
+
 
 int main(int, char **){
     //Link the call backs
+
     canvas.SetMouseMove(MouseMove);
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    //canvas.SetTimer(0.05, OnTimer);
+    canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

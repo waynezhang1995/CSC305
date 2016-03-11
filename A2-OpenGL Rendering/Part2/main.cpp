@@ -8,8 +8,8 @@
 #include "Eigen/Dense"
 #include <iostream>
 
-unsigned int width = 512;
-unsigned int height = 512;
+unsigned int width = 1024;
+unsigned int height = 1024;
 
 using namespace Eigen;
 using namespace std;
@@ -36,7 +36,7 @@ const char * vshader_square = "\
         vec4 temp = UseMvp * vec4(vpoint,1);\
         gl_Position = temp ;\
         interPoint = temp;\
-        fnormal = inverse((transpose(UseMvp))) * vec4(npoint,1);\
+        fnormal = inverse((transpose(UseMvp))) * vec4(npoint,0);\
     }\
     void main(){\
     RotationMatrix(UseMvp);}";
@@ -48,13 +48,12 @@ const char * fshader_square = "\
     in vec4 interPoint;\
     uniform mat4 UseMvp;\
     void main(){\
-    vec4 LightPos = vec4(1.0f,1.0f,0,1.0f);\
-    vec4 Lp = UseMvp * LightPos;\
-    vec4 LightDir = normalize(Lp - interPoint);\
-    float diffuseterm = dot(LightDir,normalize(fnormal));\
-    if(diffuseterm > 0){\
-        color = vec3(1.0f,1.0f,1.0f) * diffuseterm ;\
-    }\
+    vec3 LightPos = vec3(1.0f,1.0f,1.0f);\
+    vec4 Lp = UseMvp *vec4(LightPos,1);\
+    vec4 LightDir = normalize(Lp - interPoint );\
+    vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
+    float diffuseterm = max(dot(LightDir,n),0.0);\
+        color = vec3(0.3f,0,0) + vec3(1.0f,0,0) * diffuseterm;\
     }";
 
 const GLfloat vpoint[]={
@@ -193,10 +192,19 @@ void InitializeGL()
 
 
     glBindBuffer(GL_ARRAY_BUFFER,normalBufferID);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(npoint),npoint,GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(npoint),npoint,GL_DYNAMIC_DRAW);
     GLuint npoint_id = glGetAttribLocation(ProgramID,"npoint");
     glEnableVertexAttribArray(npoint_id);
     glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
+
+    //glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
+    //glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
+
+    //glClearDepth(1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+
 }
 
 void MouseMove(double x, double y)
@@ -222,11 +230,13 @@ void MouseButton(MouseButtons mouseButton, bool press)
         if (press == true) leftButtonPressed = true;
         else leftButtonPressed = false;
     }
+
     if (mouseButton == RightButton)
     {
         if (press == true) rightButtonPressed = true;
         else rightButtonPressed = false;
     }
+
 }
 
 void KeyPress(char keychar)
@@ -255,7 +265,7 @@ void OnPaint()
     viewtmp<<1,0,0,-EysPos.x(),
              0,1,0,-EysPos.y(),
              0,0,1,-EysPos.z(),
-              0,0,0,1;
+             0,0,0,1;
 
     viewrot<<U.x(),U.y(),U.z(),0,
              V.x(),V.y(),V.z(),0,
@@ -266,12 +276,12 @@ void OnPaint()
 
     perspective<<1,0,0,0,
                  0,1,0,0,
-                 0,0,-1-50/-1,50,
+                 0,0,-1-20/-1,20,
                  0,0,1/-1,0;
 
     Orth<<1,0,0,0,
           0,1,0,0,
-          0,0,2/(-1-(-50)),-(-1-50)/(-1+50),
+          0,0,2/(-1-(-20)),-(-1-20)/(-1+20),
           0,0,0,1;
 
     Mvp = Orth * perspective * view;
@@ -286,9 +296,8 @@ void OnPaint()
      * if leftbutton pressed --> RotationAngle
      * if rightbutton pressed --> RotationAngle2
      */
-    //glEnable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_LESS);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClearDepth(1.0f);                   // Set background depth to farthest
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
     glUseProgram(0);
@@ -298,7 +307,7 @@ void OnPaint()
 
 void OnTimer()
 {
-    rotateAngle += RotatingSpeed;
+    rotateAngle1 += RotatingSpeed;
 }
 
 int main(int, char **){
@@ -307,7 +316,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    canvas.SetTimer(0.05, OnTimer);
+    //canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

@@ -28,24 +28,17 @@ float lasty = vppos_y;//last cursor position; y coordiante
 //take inverse transpose
 const char * vshader_square = "\
     #version 330 core \n \
-    in vec3 vpoint;\
-    in vec3 npoint;\
-    in vec3 vskypoint;\
-    out vec4 fnormal;\
+    layout(location = 0) in vec3 vpoint;\
     out vec4 interPoint;\
     in vec2 vtexcoord;\
-    out vec4 skyinterPoint;\
     out vec2 uv;\
     uniform mat4 UseMvp;\
     \
     void RotationMatrix(mat4 UseMvp){\
         vec4 temp = UseMvp * vec4(vpoint,1);\
-        vec4 tempsky = UseMvp * vec4(vskypoint,1);\
         gl_Position = temp ;\
         interPoint = temp;\
-        skyinterPoint = tempsky;\
         uv = vtexcoord;\
-        fnormal = inverse((transpose(UseMvp))) * vec4(npoint,0);\
     }\
     void main(){\
     RotationMatrix(UseMvp);}";
@@ -53,13 +46,10 @@ const char * vshader_square = "\
 const char * fshader_square = "\
     #version 330 core \n \
     out vec3 color;\
-    in vec4 fnormal;\
     in vec4 interPoint;\
-    in vec4 skyinterPoint;\
     in vec2 uv;\
     uniform mat4 UseMvp;\
     uniform sampler2D tex;\
-    uniform sampler2D sky;\
     void main(){\
     vec2 uv_center = vec2(0.5,0.5);\
     vec3 LightPos = vec3(0,0,1.0f);\
@@ -82,59 +72,47 @@ float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float RotatingSpeed = 0.02;
 
 GLuint VertexArrayID = 0;
+GLuint skyID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
 
-float dis = 2.0;
+float dis = 5.0;
 
 void InitializeGL()
 {
-    //vertex Array Object
-    glGenVertexArrays(1,&VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    GLuint vertexBufferID;
+    GLuint skyBufferID;
 
-    //Vertex Buffer Object
+
     ProgramID = compile_shaders(vshader_square,fshader_square);
     glUseProgram(ProgramID);
     MvpID = glGetUniformLocation(ProgramID,"UseMvp");
-    GLuint vertexBufferID;
-    GLuint normalBufferID;
-    GLuint skyBufferID;
-    glGenBuffers(1,&vertexBufferID);    //actually contains the vertices of square
-    glGenBuffers(1,&normalBufferID);
+
     glGenBuffers(1,&skyBufferID);
-    glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
-    GLuint vpoint_id = glGetAttribLocation(ProgramID,"vpoint");
-    glEnableVertexAttribArray(vpoint_id);
-    glVertexAttribPointer(vpoint_id,3,GL_FLOAT,false,0,0);
-
-    glBindBuffer(GL_ARRAY_BUFFER,normalBufferID);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(npoint),npoint,GL_DYNAMIC_DRAW);
-    GLuint npoint_id = glGetAttribLocation(ProgramID,"npoint");
-    glEnableVertexAttribArray(npoint_id);
-    glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
-
     glBindBuffer(GL_ARRAY_BUFFER,skyBufferID);
     glBufferData(GL_ARRAY_BUFFER,sizeof(vskypoint),vskypoint,GL_DYNAMIC_DRAW);
-    GLuint skypoint_id = glGetAttribLocation(ProgramID,"vskypoint");
-    glEnableVertexAttribArray(skypoint_id);
-    glVertexAttribPointer(skypoint_id,3,GL_FLOAT,false,0,0);
-
+    glGenVertexArrays(1,&skyID);
+    glBindVertexArray(skyID);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
     loadpng(ProgramID); //load png file
 
+    glGenBuffers(1,&vertexBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
+    glGenVertexArrays(1,&VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
+    loadpng(ProgramID); //load png file
 
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
 
-    //glClearDepth(1.0f);
+    glEnable (GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
-
-
-
-
-
-
 
 }
 
@@ -147,7 +125,7 @@ void MouseMove(double x, double y)
 
     if(leftButtonPressed == true){//left button
          rotateAngle += RotatingSpeed * -dx;//rotate camera left or right (dx > 0 --> right; dx < 0 --> left )
-         rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
+         //rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
     }
     if(rightButtonPressed == true){//right button
          dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
@@ -217,19 +195,18 @@ void OnPaint()
 
     Mvp = Orth * perspective * view;
     /*******************End**********************/
-    //cout<<Mvp<<endl;
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
     glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
-    /*
-     * if leftbutton pressed --> RotationAngle
-     * if rightbutton pressed --> RotationAngle2
-     */
-    //glClearDepth(1.0f);                   // Set background depth to farthest
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(skyID);
     glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
 
     glUseProgram(0);

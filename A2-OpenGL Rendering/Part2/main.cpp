@@ -7,9 +7,11 @@
 #include <math.h>
 #include "Eigen/Dense"
 #include <iostream>
+#include "data.h"
+#include "loadtexture.h"
 
-unsigned int width = 512;
-unsigned int height = 512;
+unsigned int width = 1024;
+unsigned int height = 1024;
 
 using namespace Eigen;
 using namespace std;
@@ -28,14 +30,21 @@ const char * vshader_square = "\
     #version 330 core \n \
     in vec3 vpoint;\
     in vec3 npoint;\
+    in vec3 vskypoint;\
     out vec4 fnormal;\
     out vec4 interPoint;\
+    in vec2 vtexcoord;\
+    out vec4 skyinterPoint;\
+    out vec2 uv;\
     uniform mat4 UseMvp;\
     \
     void RotationMatrix(mat4 UseMvp){\
         vec4 temp = UseMvp * vec4(vpoint,1);\
+        vec4 tempsky = UseMvp * vec4(vskypoint,1);\
         gl_Position = temp ;\
         interPoint = temp;\
+        skyinterPoint = tempsky;\
+        uv = vtexcoord;\
         fnormal = inverse((transpose(UseMvp))) * vec4(npoint,0);\
     }\
     void main(){\
@@ -46,8 +55,12 @@ const char * fshader_square = "\
     out vec3 color;\
     in vec4 fnormal;\
     in vec4 interPoint;\
+    in vec2 uv;\
     uniform mat4 UseMvp;\
+    uniform sampler2D tex;\
+    uniform sampler2D sky;\
     void main(){\
+    vec2 uv_center = vec2(0.5,0.5);\
     vec3 LightPos = vec3(0,0,1.0f);\
     vec4 Lp = UseMvp *vec4(LightPos,1);\
     vec4 LightDir = normalize(Lp - interPoint );\
@@ -57,155 +70,10 @@ const char * fshader_square = "\
     float rv = max(0.0f,dot(R,normalize(-(interPoint.xyz))));\
     float specular = pow(rv,100);\
     float diffuseterm = max(dot(LightDir,n),0.0);\
-        color = vec3(0.3f,0,0) + vec3(1.0f,0,0) * diffuseterm + vec3(1.0f,1.0f,1.0f) * specular;\
+        color = texture(tex,uv).rgb + texture(tex,uv).rgb * diffuseterm + vec3(1.0f,1.0f,1.0f) * specular;\
     }";
 
-const GLfloat vpoint[]={
-        //#1
-        -0.5f,-0.5f,-0.5f, // triangle 1 : beg
-        -0.5f,-0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f, // triangle 1 : end
-        //#5
-        -0.5f,-0.5f,-0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f,-0.5f,
-        //#2
-         0.5f, 0.5f,-0.5f, // triangle 2 : begin
-        -0.5f,-0.5f,-0.5f,
-        -0.5f, 0.5f,-0.5f, // triangle 2 : end
-        //#4
-         0.5f, 0.5f,-0.5f,
-         0.5f,-0.5f,-0.5f,
-        -0.5f,-0.5f,-0.5f,
-        //#3
-         0.5f,-0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,
-         0.5f,-0.5f,-0.5f,
-        //#6
-         0.5f,-0.5f, 0.5f,
-        -0.5f,-0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,
-        //#7
-        -0.5f, 0.5f, 0.5f,
-        -0.5f,-0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f,
-        //#12
-         0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f,
-        //#8
-         0.5f, 0.5f, 0.5f,
-         0.5f,-0.5f,-0.5f,
-         0.5f, 0.5f,-0.5f,
-        //#9
-         0.5f,-0.5f,-0.5f,
-         0.5f, 0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f,
-        //#10
-         0.5f, 0.5f, 0.5f,
-         0.5f, 0.5f,-0.5f,
-        -0.5f, 0.5f,-0.5f,
-        //#11
-         0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f,-0.5f,
-        -0.5f, 0.5f, 0.5f,
 
-};
-
-const GLfloat npoint[]={
-        //#1.
-        -1.0f,0,0,
-        -1.0f,0,0,
-        -1.0f,0,0,
-        //#2.
-        0,0,-1.0f,
-        0,0,-1.0f,
-        0,0,-1.0f,
-        //#3.
-        0,-1.0f,0,
-        0,-1.0f,0,
-        0,-1.0f,0,
-        //#4.
-        0,0,-1.0f,
-        0,0,-1.0f,
-        0,0,-1.0f,
-        //#5.
-        -1.0f,0,0,
-        -1.0f,0,0,
-        -1.0f,0,0,
-        //#6.
-        0,-1.0f,0,
-        0,-1.0f,0,
-        0,-1.0f,0,
-        //#7.
-        0,0,1.0f,
-        0,0,1.0f,
-        0,0,1.0f,
-        //#8
-        1.0f,0,0,
-        1.0f,0,0,
-        1.0f,0,0,
-        //#9
-        1.0f,0,0,
-        1.0f,0,0,
-        1.0f,0,0,
-        //#10
-        0,1.0f,0,
-        0,1.0f,0,
-        0,1.0f,0,
-        //#11
-        0,1.0f,0,
-        0,1.0f,0,
-        0,1.0f,0,
-        //#12.
-        0,0,1.0f,
-        0,0,1.0f,
-        0,0,1.0f,
-};
-
-const GLfloat vtexcoord[] = {
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-
-    0, 1,
-    1, 1,
-    0, 0, //upper half of the square
-    1, 1,
-    1, 0,
-    0, 0,
-}; //lower half of the square
 
 float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
@@ -215,9 +83,6 @@ float RotatingSpeed = 0.02;
 GLuint VertexArrayID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
-
-//GLuint loadBMP_custom(const char * imagepath)
-
 
 float dis = 2.0;
 
@@ -233,8 +98,10 @@ void InitializeGL()
     MvpID = glGetUniformLocation(ProgramID,"UseMvp");
     GLuint vertexBufferID;
     GLuint normalBufferID;
+    GLuint skyBufferID;
     glGenBuffers(1,&vertexBufferID);    //actually contains the vertices of square
     glGenBuffers(1,&normalBufferID);
+    glGenBuffers(1,&skyBufferID);
     glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
     glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
     GLuint vpoint_id = glGetAttribLocation(ProgramID,"vpoint");
@@ -247,32 +114,16 @@ void InitializeGL()
     glEnableVertexAttribArray(npoint_id);
     glVertexAttribPointer(npoint_id,3,GL_FLOAT,false,0,0);
 
-    Texture teximage = LoadPNGTexture("texture1.png");
-    GLuint texobject;
-    glGenTextures(1, &texobject);
-    glBindTexture(GL_TEXTURE_2D, texobject);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximage.width,
-    teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-    teximage.dataptr);
+    glBindBuffer(GL_ARRAY_BUFFER,skyBufferID);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(vskypoint),vskypoint,GL_DYNAMIC_DRAW);
+    GLuint skypoint_id = glGetAttribLocation(ProgramID,"vskypoint");
+    glEnableVertexAttribArray(skypoint_id);
+    glVertexAttribPointer(skypoint_id,3,GL_FLOAT,false,0,0);
 
-    GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
-    glUniform1i(tex_bindingpoint, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texobject);
-    GLuint texcoordbuffer;
-    glGenBuffers(1, &texcoordbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, texcoordbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vtexcoord), vtexcoord,
-    GL_STATIC_DRAW);
-    GLuint texcoordBindingPosition = glGetAttribLocation(ProgramID,
-    "vtexcoord");
-    glEnableVertexAttribArray(texcoordBindingPosition);
-    glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
-    GL_FALSE, 0, (void *)0);
+    loadpng(ProgramID); //load png file
+
+
+
     //glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -295,7 +146,7 @@ void MouseMove(double x, double y)
 
     if(leftButtonPressed == true){//left button
          rotateAngle += RotatingSpeed * -dx;//rotate camera left or right (dx > 0 --> right; dx < 0 --> left )
-         //rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
+         rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
     }
     if(rightButtonPressed == true){//right button
          dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
@@ -397,7 +248,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    canvas.SetTimer(0.05, OnTimer);
+    //canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

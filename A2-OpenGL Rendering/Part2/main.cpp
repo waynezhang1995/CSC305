@@ -55,6 +55,7 @@ const char * fshader_square = "\
     out vec3 color;\
     in vec4 fnormal;\
     in vec4 interPoint;\
+    in vec4 skyinterPoint;\
     in vec2 uv;\
     uniform mat4 UseMvp;\
     uniform sampler2D tex;\
@@ -230,6 +231,7 @@ void OnPaint()
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
+
     glUseProgram(0);
     glBindVertexArray(0);
 

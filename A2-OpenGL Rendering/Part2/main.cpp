@@ -1,3 +1,4 @@
+
 /*
  * Author: YuWei(Wayne) Zhang
  * V00805647
@@ -10,8 +11,8 @@
 #include "data.h"
 #include "loadtexture.h"
 
-unsigned int width = 1024;
-unsigned int height = 1024;
+unsigned int width = 512;
+unsigned int height = 512;
 
 using namespace Eigen;
 using namespace std;
@@ -46,13 +47,13 @@ const char * vshader_square = "\
         } \
         else { \
           mat4 R = mat4(1);\
-              R[0][0] =  cos(rot);\
-              R[0][1] =  sin(rot);\
-              R[1][0] = -sin(rot);\
-              R[1][1] =  cos(rot);\
+               R[3][0] = -4.0*sin(3.141592653*0.5)*sin(rot);\
+               R[3][1] = -4.0*cos(3.141592653*0.5);\
+               R[3][2] = -4.0*sin(3.141592653*0.5)*cos(rot);\
+              \
              \
-              vec4 temp =  UseMvp * SmallerCube * vec4(vpoint,1);\
-              gl_Position = R * temp ;\
+              vec4 temp = UseMvp * SmallerCube * R * vec4(vpoint,1);\
+              gl_Position =temp ;\
               interPoint = temp;\
               uv = vtexcoord;\
         }\
@@ -94,7 +95,7 @@ GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
 GLuint rotID = 0;
 
-float dis = 6.0;
+float dis = 3.0;
 
 void InitializeGL()
 {
@@ -131,7 +132,7 @@ void InitializeGL()
     glCullFace(GL_BACK);
 
     Matrix4f SmallerCube;
-    SmallerCube << 0.5, 0, 0, 2.0,
+    SmallerCube << 0.5, 0, 0, 0,
                    0, 0.5, 0, 0,
                    0, 0, 0.5, 0,
                    0, 0, 0, 1;
@@ -248,9 +249,6 @@ void OnPaint()
     Mvp = Orth * perspective * view;
     /*******************End**********************/
 
-
-
-
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -270,6 +268,7 @@ void OnTimer()
 {
 
     rot += RotatingSpeed;
+
 }
 
 
@@ -289,4 +288,5 @@ int main(int, char **){
 
     return 0;
 }
+
 

@@ -28,17 +28,33 @@ float lasty = vppos_y;//last cursor position; y coordiante
 //take inverse transpose
 const char * vshader_square = "\
     #version 330 core \n \
-    layout(location = 0) in vec3 vpoint;\
+    in vec3 vpoint;\
     out vec4 interPoint;\
     in vec2 vtexcoord;\
+    in float CubeID; \
     out vec2 uv;\
     uniform mat4 UseMvp;\
+    uniform mat4 SmallerCube;\
+    uniform float rot;\
     \
     void RotationMatrix(mat4 UseMvp){\
-        vec4 temp = UseMvp * vec4(vpoint,1);\
-        gl_Position = temp ;\
-        interPoint = temp;\
-        uv = vtexcoord;\
+             mat4 R = mat4(1);\
+              R[0][0] =  cos(rot);\
+              R[0][1] =  sin(rot);\
+              R[1][0] = -sin(rot);\
+              R[1][1] =  cos(rot);\
+        if(CubeID == 0){ \
+            vec4 temp = UseMvp * vec4(vpoint,1);\
+            gl_Position = temp ;\
+            interPoint = temp;\
+            uv = vtexcoord;\
+        } \
+        else { \
+             vec4 temp =  UseMvp * SmallerCube * vec4(vpoint,1);\
+              gl_Position = R * temp ;\
+              interPoint = temp;\
+              uv = vtexcoord;\
+        }\
     }\
     void main(){\
     RotationMatrix(UseMvp);}";
@@ -70,50 +86,85 @@ float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
 float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float RotatingSpeed = 0.02;
-
+float rot = 0;
 GLuint VertexArrayID = 0;
 GLuint skyID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
+GLuint rotID = 0;
 
-float dis = 5.0;
+float dis = 6.0;
 
 void InitializeGL()
 {
-    GLuint vertexBufferID;
-    GLuint skyBufferID;
-
-
     ProgramID = compile_shaders(vshader_square,fshader_square);
     glUseProgram(ProgramID);
     MvpID = glGetUniformLocation(ProgramID,"UseMvp");
+    rotID = glGetUniformLocation(ProgramID,"rot");
+    glGenVertexArrays(1,&VertexArrayID);
+    glBindVertexArray(VertexArrayID);
 
-    glGenBuffers(1,&skyBufferID);
-    glBindBuffer(GL_ARRAY_BUFFER,skyBufferID);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(vskypoint),vskypoint,GL_DYNAMIC_DRAW);
-    glGenVertexArrays(1,&skyID);
-    glBindVertexArray(skyID);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
-    loadpng(ProgramID); //load png file
-
+    GLuint vertexBufferID;
     glGenBuffers(1,&vertexBufferID);
     glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
     glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
-    glGenVertexArrays(1,&VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,3,GL_FLOAT,false,0,0);
-    loadpng(ProgramID); //load png file
 
-    glBindBuffer(GL_ARRAY_BUFFER,0);
-    glBindVertexArray(0);
+    GLuint vpointid = glGetAttribLocation(ProgramID, "vpoint");
+    glEnableVertexAttribArray(vpointid);
+    glVertexAttribPointer(vpointid,3,GL_FLOAT,false,0,0);
 
-    glEnable (GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+    GLuint cubeBufferID;
+    glGenBuffers(1,&cubeBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER,cubeBufferID);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(CubeID),CubeID,GL_STATIC_DRAW);
+
+    GLuint cube_id = glGetAttribLocation(ProgramID, "CubeID");
+    glEnableVertexAttribArray(cube_id);
+    glVertexAttribPointer(cube_id, 1, GL_FLOAT, false, 0, 0);
+
+    glClearDepth(0.0f);
+
+    //glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_ALWAYS);
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
+    Matrix4f SmallerCube;
+    SmallerCube << 0.5, 0, 0, 2.5,
+                   0, 0.5, 0, 0,
+                   0, 0, 0.5, 0,
+                   0, 0, 0, 1;
+
+    glUniformMatrix4fv(glGetUniformLocation(ProgramID, "SmallerCube"), 1, false, SmallerCube.data());
+
+    Texture teximage = LoadPNGTexture("texture.png");
+
+    GLuint texobject;
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &texobject);
+    glBindTexture(GL_TEXTURE_2D, texobject);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximage.width,
+    teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    teximage.dataptr);
+    GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
+    glUniform1i(tex_bindingpoint, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texobject);
+
+    GLuint texcoordbuffer;
+    glGenBuffers(1, &texcoordbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, texcoordbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vtexcoord), vtexcoord,
+    GL_STATIC_DRAW);
+    GLuint texcoordBindingPosition = glGetAttribLocation(ProgramID,
+    "vtexcoord");
+    glEnableVertexAttribArray(texcoordBindingPosition);
+    glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
+    GL_FALSE, 0, (void *)0);
 }
 
 void MouseMove(double x, double y)
@@ -125,7 +176,7 @@ void MouseMove(double x, double y)
 
     if(leftButtonPressed == true){//left button
          rotateAngle += RotatingSpeed * -dx;//rotate camera left or right (dx > 0 --> right; dx < 0 --> left )
-         //rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
+         rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
     }
     if(rightButtonPressed == true){//right button
          dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
@@ -185,29 +236,29 @@ void OnPaint()
 
     perspective<<1,0,0,0,
                  0,1,0,0,
-                 0,0,-1-20/-1,20,
+                 0,0,-1-50/-1,50,
                  0,0,1/-1,0;
 
     Orth<<1,0,0,0,
           0,1,0,0,
-          0,0,2/(-1-(-20)),-(-1-20)/(-1+20),
+          0,0,2/(-1-(-50)),-(-1-50)/(-1+50),
           0,0,0,1;
 
     Mvp = Orth * perspective * view;
     /*******************End**********************/
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_CULL_FACE);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
+
     glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
-    glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glBindVertexArray(skyID);
-    glDrawArrays(GL_TRIANGLES,0,36);//12 triangles each one has 3 vertices
+    glUniform1f(rotID,rot);
+    glDrawArrays(GL_TRIANGLES,0,72);//12 triangles each one has 3 vertices
 
     glUseProgram(0);
     glBindVertexArray(0);
@@ -216,7 +267,8 @@ void OnPaint()
 
 void OnTimer()
 {
-    rotateAngle += RotatingSpeed;
+
+    rot += RotatingSpeed;
 }
 
 
@@ -227,7 +279,7 @@ int main(int, char **){
     canvas.SetMouseButton(MouseButton);
     canvas.SetKeyPress(KeyPress);
     canvas.SetOnPaint(OnPaint);
-    //canvas.SetTimer(0.05, OnTimer);
+    canvas.SetTimer(0.05, OnTimer);
     //Show Window
     canvas.Initialize(width, height, "OpenGL Intro Demo");
     //Do our initialization

@@ -38,11 +38,6 @@ const char * vshader_square = "\
     uniform float rot;\
     \
     void RotationMatrix(mat4 UseMvp){\
-             mat4 R = mat4(1);\
-              R[0][0] =  cos(rot);\
-              R[0][1] =  sin(rot);\
-              R[1][0] = -sin(rot);\
-              R[1][1] =  cos(rot);\
         if(CubeID == 0){ \
             vec4 temp = UseMvp * vec4(vpoint,1);\
             gl_Position = temp ;\
@@ -50,7 +45,13 @@ const char * vshader_square = "\
             uv = vtexcoord;\
         } \
         else { \
-             vec4 temp =  UseMvp * SmallerCube * vec4(vpoint,1);\
+          mat4 R = mat4(1);\
+              R[0][0] =  cos(rot);\
+              R[0][1] =  sin(rot);\
+              R[1][0] = -sin(rot);\
+              R[1][1] =  cos(rot);\
+             \
+              vec4 temp =  UseMvp * SmallerCube * vec4(vpoint,1);\
               gl_Position = R * temp ;\
               interPoint = temp;\
               uv = vtexcoord;\
@@ -130,7 +131,7 @@ void InitializeGL()
     glCullFace(GL_BACK);
 
     Matrix4f SmallerCube;
-    SmallerCube << 0.5, 0, 0, 2.5,
+    SmallerCube << 0.5, 0, 0, 2.0,
                    0, 0.5, 0, 0,
                    0, 0, 0.5, 0,
                    0, 0, 0, 1;

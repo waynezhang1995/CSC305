@@ -20,11 +20,9 @@ void loadpng(GLuint ProgramID){
     teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
     teximage.dataptr);
     GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
-    glUniform1i(tex_bindingpoint, 1);
-    glActiveTexture(GL_TEXTURE0 + 1);
-    //glBindTexture(GL_TEXTURE_2D, texobject);
-
-
+    glUniform1i(tex_bindingpoint, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texobject);
 
     GLuint texcoordbuffer;
     glGenBuffers(1, &texcoordbuffer);

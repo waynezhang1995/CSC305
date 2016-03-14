@@ -11,8 +11,8 @@
 #include "data.h"
 #include "loadtexture.h"
 
-unsigned int width = 1024;
-unsigned int height = 1024;
+unsigned int width = 512;
+unsigned int height = 512;
 
 using namespace Eigen;
 using namespace std;
@@ -30,16 +30,13 @@ float lasty = vppos_y;//last cursor position; y coordiante
 const char * vshader_square = "\
     #version 330 core \n \
     in vec3 vpoint;\
-    in vec3 vnormal;\
     out vec4 interPoint;\
     in vec2 vtexcoord;\
     in float CubeID; \
     out vec2 uv;\
-    out vec3 normal;\
     uniform mat4 UseMvp;\
     uniform mat4 SmallerCube;\
     uniform float rot;\
-    uniform float spin;\
     \
     void RotationMatrix(mat4 UseMvp){\
         if(CubeID == 0){ \
@@ -47,21 +44,15 @@ const char * vshader_square = "\
             gl_Position = temp ;\
             interPoint = temp;\
             uv = vtexcoord;\
-            normal = vnormal;\
         } \
         else { \
           mat4 R = mat4(1);\
-               R[3][0] = -7.5*sin(3.141592653*0.5)*sin(rot);\
-               R[3][1] = -7.5*cos(3.141592653*0.5);\
-               R[3][2] = -7.5*sin(3.141592653*0.5)*cos(rot);\
-          mat4 S = mat4(1);\
-               S[0][0] =  cos(spin);\
-               S[2][0] =  sin(spin);\
-               S[0][2] = -sin(spin);\
-               S[2][2] =  cos(spin);\
+               R[3][0] = -4.0*sin(3.141592653*0.5)*sin(rot);\
+               R[3][1] = -4.0*cos(3.141592653*0.5);\
+               R[3][2] = -4.0*sin(3.141592653*0.5)*cos(rot);\
               \
              \
-              vec4 temp = UseMvp * SmallerCube * R * S * vec4(vpoint,1);\
+              vec4 temp = UseMvp * SmallerCube * R * vec4(vpoint,1);\
               gl_Position =temp ;\
               interPoint = temp;\
               uv = vtexcoord;\
@@ -75,14 +66,13 @@ const char * fshader_square = "\
     out vec3 color;\
     in vec4 interPoint;\
     in vec2 uv;\
-    in vec3 normal;\
     uniform mat4 UseMvp;\
     uniform sampler2D tex;\
     void main(){\
+    vec2 uv_center = vec2(0.5,0.5);\
     vec3 LightPos = vec3(0,0,1.0f);\
     vec4 Lp = UseMvp *vec4(LightPos,1);\
     vec4 LightDir = normalize(Lp - interPoint );\
-    vec4 nor = vec4(normalize(normal),0);\
     vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
     vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
     vec3 R = normalize(tmp - LightDir.xyz);\
@@ -98,28 +88,21 @@ float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
 float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float RotatingSpeed = 0.02;
-float rot = M_PI * 0.5;
-float spin = 0;
-
+float rot = 0;
 GLuint VertexArrayID = 0;
 GLuint skyID = 0;
 GLuint ProgramID = 0;//the program we wrote
 GLuint MvpID = 0;
 GLuint rotID = 0;
-GLuint spinID = 0;
 
-
-float dis = 8.0;
+float dis = 3.0;
 
 void InitializeGL()
 {
-    glFrontFace(GL_CCW);
     ProgramID = compile_shaders(vshader_square,fshader_square);
     glUseProgram(ProgramID);
     MvpID = glGetUniformLocation(ProgramID,"UseMvp");
     rotID = glGetUniformLocation(ProgramID,"rot");
-    spinID = glGetUniformLocation(ProgramID,"spin");
-
     glGenVertexArrays(1,&VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
@@ -141,8 +124,12 @@ void InitializeGL()
     glEnableVertexAttribArray(cube_id);
     glVertexAttribPointer(cube_id, 1, GL_FLOAT, false, 0, 0);
 
+    glClearDepth(0.0f);
 
-    //glCullFace(GL_BACK);
+    //glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_GREATER);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     Matrix4f SmallerCube;
     SmallerCube << 0.5, 0, 0, 0,
@@ -180,24 +167,6 @@ void InitializeGL()
     glEnableVertexAttribArray(texcoordBindingPosition);
     glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
     GL_FALSE, 0, (void *)0);
-
-    /* normal vertex attibute */
-    GLuint normalbuffer;
-    glGenBuffers(1, &normalbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vnormal), vnormal,
-    GL_STATIC_DRAW);
-    GLuint normalBindingPosition = glGetAttribLocation(ProgramID,
-    "vnormal");
-    glEnableVertexAttribArray(normalBindingPosition);
-    glVertexAttribPointer(normalBindingPosition, 3, GL_FLOAT,
-    GL_FALSE, 0, (void *)0);
-
-    glClearDepth(0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc( GL_ALWAYS);
-    glEnable(GL_CULL_FACE);
-
 }
 
 void MouseMove(double x, double y)
@@ -240,6 +209,8 @@ void KeyPress(char keychar)
 void OnPaint()
 {
     /******************Setting up Mvp***********************/
+    float far = -50;
+    float near = -1;
     Matrix4f Mvp;
     Matrix4f viewtmp;
     Matrix4f viewrot;
@@ -269,12 +240,12 @@ void OnPaint()
 
     perspective<<1,0,0,0,
                  0,1,0,0,
-                 0,0,-1-50/-1,50,
-                 0,0,1/-1,0;
+                 0,0,(near+far)/near,-far,
+                 0,0,1/near,0;
 
     Orth<<1,0,0,0,
           0,1,0,0,
-          0,0,2/(-1-(-50)),-(-1-50)/(-1+50),
+          0,0,2/(near-far),-(near+far)/(near-far),
           0,0,0,1;
 
     Mvp = Orth * perspective * view;
@@ -282,15 +253,13 @@ void OnPaint()
 
     glUseProgram(ProgramID);
     glBindVertexArray(VertexArrayID);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glEnable(GL_DEPTH_TEST);
 
 
     glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
     glUniform1f(rotID,rot);
-    glUniform1f(spinID,spin);
-    glDrawArrays(GL_TRIANGLES,0,sizeof(vpoint)/3);//12 triangles each one has 3 vertices
+    glDrawArrays(GL_TRIANGLES,0,72);//12 triangles each one has 3 vertices
 
     glUseProgram(0);
     glBindVertexArray(0);
@@ -299,7 +268,7 @@ void OnPaint()
 
 void OnTimer()
 {
-    spin += RotatingSpeed * 8;
+    glClearDepth(0.0f);
     rot += RotatingSpeed;
 
 }

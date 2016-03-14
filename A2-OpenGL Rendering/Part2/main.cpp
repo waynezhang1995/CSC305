@@ -30,10 +30,12 @@ float lasty = vppos_y;//last cursor position; y coordiante
 const char * vshader_square = "\
     #version 330 core \n \
     in vec3 vpoint;\
+    in vec3 vnormal;\
     out vec4 interPoint;\
     in vec2 vtexcoord;\
     in float CubeID; \
     out vec2 uv;\
+    out vec3 normal;\
     uniform mat4 UseMvp;\
     uniform mat4 SmallerCube;\
     uniform float rot;\
@@ -45,6 +47,7 @@ const char * vshader_square = "\
             gl_Position = temp ;\
             interPoint = temp;\
             uv = vtexcoord;\
+            normal = vnormal;\
         } \
         else { \
           mat4 R = mat4(1);\
@@ -72,13 +75,14 @@ const char * fshader_square = "\
     out vec3 color;\
     in vec4 interPoint;\
     in vec2 uv;\
+    in vec3 normal;\
     uniform mat4 UseMvp;\
     uniform sampler2D tex;\
     void main(){\
-    vec2 uv_center = vec2(0.5,0.5);\
     vec3 LightPos = vec3(0,0,1.0f);\
     vec4 Lp = UseMvp *vec4(LightPos,1);\
     vec4 LightDir = normalize(Lp - interPoint );\
+    vec4 nor = vec4(normalize(normal),0);\
     vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
     vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
     vec3 R = normalize(tmp - LightDir.xyz);\
@@ -94,7 +98,7 @@ float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
 float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
 float RotatingSpeed = 0.02;
-float rot = 0;
+float rot = M_PI * 0.5;
 float spin = 0;
 
 GLuint VertexArrayID = 0;
@@ -104,10 +108,12 @@ GLuint MvpID = 0;
 GLuint rotID = 0;
 GLuint spinID = 0;
 
+
 float dis = 8.0;
 
 void InitializeGL()
 {
+    glFrontFace(GL_CCW);
     ProgramID = compile_shaders(vshader_square,fshader_square);
     glUseProgram(ProgramID);
     MvpID = glGetUniformLocation(ProgramID,"UseMvp");
@@ -173,6 +179,18 @@ void InitializeGL()
     "vtexcoord");
     glEnableVertexAttribArray(texcoordBindingPosition);
     glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
+    GL_FALSE, 0, (void *)0);
+
+    /* normal vertex attibute */
+    GLuint normalbuffer;
+    glGenBuffers(1, &normalbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vnormal), vnormal,
+    GL_STATIC_DRAW);
+    GLuint normalBindingPosition = glGetAttribLocation(ProgramID,
+    "vnormal");
+    glEnableVertexAttribArray(normalBindingPosition);
+    glVertexAttribPointer(normalBindingPosition, 3, GL_FLOAT,
     GL_FALSE, 0, (void *)0);
 
     glClearDepth(0.0f);

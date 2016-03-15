@@ -176,13 +176,13 @@ const GLfloat vtexcoord[] = {
     1.0f/2, 1.0f/3,
     1.0f/2, 2.0f/3,
     //bottom
-    1.0f/2, 2.0f/3,
     1.0f/4, 1.0f/3,
-    1.0f/4, 2.0f/3, //upper half of the square
+    1.0f/2, 2.0f/3,
+    1.0f/2, 1.0f/3, //upper half of the square
 
-    1.0f/2, 2.0f/3,
-    1.0f/2, 1.0f/3,
     1.0f/4, 1.0f/3,
+    1.0f/4, 2.0f/3,
+    1.0f/2, 2.0f/3,
     //frontal
     0, 2.0f/3,
     1.0f/4, 2.0f/3,

@@ -111,7 +111,7 @@ RotationMatrix(UseMvp);}";
             }\
         \
         }else{\
-        color = texture(tex,uv).rgb;\
+        color = texture(bg,uv).rgb;\
         }\
         }";
 
@@ -132,7 +132,10 @@ GLuint MvpID = 0;
 GLuint rotID = 0;
 GLuint spinID = 0;
 GLuint EyeID = 0;
-
+GLuint tex_bindingpoint;
+GLuint tex_bindingpointBG;
+GLuint texobject;
+GLuint texobjectBG;
 float dis = 3.0;
 
 void InitializeGL()
@@ -207,14 +210,14 @@ void InitializeGL()
 
         glUniformMatrix4fv(glGetUniformLocation(ProgramID, "SmallerCube"), 1, false, SmallerCube.data());
 
-        GLuint texobject;
+
         Texture teximage = LoadPNGTexture("texture.png");
         Texture teximageBG = LoadPNGTexture("textureBG.png");
+
 
         glEnable(GL_TEXTURE_2D);
         glGenTextures(1, &texobject);
         glBindTexture(GL_TEXTURE_2D, texobject);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -222,22 +225,24 @@ void InitializeGL()
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximage.width,
                      teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                      teximage.dataptr);
-
-        GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
+        tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
         glUniform1i(tex_bindingpoint, 0);
-        glActiveTexture(GL_TEXTURE0 + 0);
 
-        glBindTexture(GL_TEXTURE_2D, texobject);
+
+
+        glEnable(GL_TEXTURE_2D);
+        glGenTextures(1, &texobjectBG);
+        glBindTexture(GL_TEXTURE_2D, texobjectBG);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, teximageBG.width,
-                     teximageBG.height, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximageBG.width,
+                     teximageBG.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                      teximageBG.dataptr);
-        GLuint tex_bindingpointBG = glGetUniformLocation(ProgramID, "bg");
+        tex_bindingpointBG = glGetUniformLocation(ProgramID, "bg");
         glUniform1i(tex_bindingpointBG, 1);
-        glActiveTexture(GL_TEXTURE0+1);
+
 
         //glBindTexture(GL_TEXTURE_2D, texobject);
         /************************/
@@ -345,7 +350,10 @@ void OnPaint()
        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
        glEnable(GL_DEPTH_TEST);
 
-
+       glActiveTexture(GL_TEXTURE0);
+       glBindTexture(GL_TEXTURE_2D,texobject);
+       glActiveTexture(GL_TEXTURE1);
+       glBindTexture(GL_TEXTURE_2D,texobjectBG);
        glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
        glUniform1f(rotID,rot);
        glUniform1f(spinID,spin);

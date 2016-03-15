@@ -67,9 +67,14 @@ normal = vnormal;\
 uv = vtexcoord;\
 id = CubeID;\
 }else{\
+                                  mat4 S = mat4(1);\
+                                  S[0][0] =  cos(spin);\
+                                  S[2][0] =  sin(spin);\
+                                  S[0][2] = -sin(spin);\
+                                  S[2][2] =  cos(spin);\
 mat4 sky = mat4(100);\
 sky[3][3] = 1;\
-vec4 temp = UseMvp * sky * vec4(vpoint,1);\
+vec4 temp = UseMvp * sky *S* vec4(vpoint,1);\
 gl_Position =temp ;\
 interPoint = temp;\
 uv = vtexcoord;\
@@ -369,8 +374,9 @@ void OnTimer()
 {
     glClearDepth(0.0f);
 
-    spin += RotatingSpeed * 8;
+    spin += RotatingSpeed * 10;
     rot += RotatingSpeed;
+    //rotateAngle += RotatingSpeed;
 
 }
 

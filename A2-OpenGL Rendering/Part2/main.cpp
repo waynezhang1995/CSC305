@@ -35,6 +35,7 @@ in vec2 vtexcoord;\
 in float CubeID; \
 out vec2 uv;\
 out vec3 normal;\
+out float id;\
 uniform mat4 UseMvp;\
 uniform mat4 SmallerCube;\
 uniform float rot;\
@@ -47,6 +48,7 @@ gl_Position = temp ;\
 interPoint = temp;\
 uv = vtexcoord;\
 normal = vnormal;\
+id = CubeID;\
 }\
 else if(CubeID == 1){ \
 mat4 R = mat4(1);\
@@ -63,52 +65,62 @@ gl_Position =temp ;\
 interPoint = temp;\
 normal = vnormal;\
 uv = vtexcoord;\
+id = CubeID;\
 }else{\
-mat4 sky = mat4(4);\
+mat4 sky = mat4(100);\
 sky[3][3] = 1;\
 vec4 temp = UseMvp * sky * vec4(vpoint,1);\
 gl_Position =temp ;\
 interPoint = temp;\
 uv = vtexcoord;\
 normal = vnormal;\
+id = CubeID;\
 }\
 }\
 void main(){\
 RotationMatrix(UseMvp);}";
 
-const char * fshader_square = "\
-#version 330 core \n \
-out vec3 color;\
-in vec4 interPoint;\
-in vec2 uv;\
-in vec3 normal;\
-uniform mat4 UseMvp;\
-uniform sampler2D tex;\
-uniform vec3 EyeP;\
-void main(){\
-vec2 uv_center = vec2(0.5,0.5);\
-vec3 LightPos = vec3(0,0,1.0f);\
-vec4 Lp = vec4(LightPos,1);\
-vec4 LightDir = normalize(interPoint - Lp);\
-vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
-vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
-vec3 R = normalize(tmp - LightDir.xyz);\
-float rv = max(0.0f,dot(R,normalize((interPoint.xyz))));\
-float specular = pow(rv,100);\
-float diffuseterm = max(dot(LightDir,n),0);\
-if(specular > 0 ){\
-color = texture(tex,uv).rgb/10 + texture(tex,uv).rgb * diffuseterm * 2 + vec3(1.0f,1.0f,1.0f) * specular;\
-}else{\
-color = texture(tex,uv).rgb/10 + texture(tex,uv).rgb * diffuseterm * 2;\
-}\
-}";
+        const char * fshader_square = "\
+        #version 330 core \n \
+        out vec3 color;\
+        in vec4 interPoint;\
+        in vec2 uv;\
+        in vec3 normal;\
+        in float id;\
+        uniform mat4 UseMvp;\
+        uniform sampler2D tex;\
+        uniform vec3 EyeP;\
+        uniform sampler2D bg;\
+        void main(){\
+        vec2 uv_center = vec2(0.5,0.5);\
+        vec3 LightPos = vec3(0,0,1.0f);\
+        vec4 Lp = vec4(LightPos,1);\
+        vec4 LightDir = normalize(interPoint - Lp);\
+        vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
+        vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
+        vec3 R = normalize(tmp - LightDir.xyz);\
+        float rv = max(0.0f,dot(R,normalize((interPoint.xyz))));\
+        float specular = pow(rv,100);\
+        float diffuseterm = max(dot(LightDir,n),0);\
+        if(id == 0 || id == 1){\
+        \
+            if(specular > 0 ){\
+            color = texture(tex,uv).rgb/10 + texture(tex,uv).rgb * diffuseterm * 2 + vec3(1.0f,1.0f,1.0f) * specular;\
+            }else{\
+            color = texture(tex,uv).rgb/10 + texture(tex,uv).rgb * diffuseterm * 2;\
+            }\
+        \
+        }else{\
+        color = texture(bg,uv).rgb;\
+        }\
+        }";
 
 
 
 float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
 float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
-float RotatingSpeed = 0.02;
+float RotatingSpeed = 0.01;
 float rot = M_PI * 0.5;
 float spin = 0;
 float far = -100.0f;
@@ -120,7 +132,10 @@ GLuint MvpID = 0;
 GLuint rotID = 0;
 GLuint spinID = 0;
 GLuint EyeID = 0;
-
+GLuint tex_bindingpoint;
+GLuint tex_bindingpointBG;
+GLuint texobject;
+GLuint texobjectBG;
 float dis = 3.0;
 
 void InitializeGL()
@@ -184,8 +199,8 @@ void InitializeGL()
 
         glClearDepth(0.0f);
         glDepthFunc(GL_GREATER);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        //glEnable(GL_CULL_FACE);
+        //glCullFace(GL_BACK);
 
         Matrix4f SmallerCube;
         SmallerCube << 0.2, 0, 0, 0,
@@ -195,9 +210,11 @@ void InitializeGL()
 
         glUniformMatrix4fv(glGetUniformLocation(ProgramID, "SmallerCube"), 1, false, SmallerCube.data());
 
-        Texture teximage = LoadPNGTexture("texture.png");
 
-        GLuint texobject;
+        Texture teximage = LoadPNGTexture("texture.png");
+        Texture teximageBG = LoadPNGTexture("textureBG.png");
+
+
         glEnable(GL_TEXTURE_2D);
         glGenTextures(1, &texobject);
         glBindTexture(GL_TEXTURE_2D, texobject);
@@ -208,10 +225,28 @@ void InitializeGL()
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximage.width,
                      teximage.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                      teximage.dataptr);
-        GLuint tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
+        tex_bindingpoint = glGetUniformLocation(ProgramID, "tex");
         glUniform1i(tex_bindingpoint, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texobject);
+
+
+
+        glEnable(GL_TEXTURE_2D);
+        glGenTextures(1, &texobjectBG);
+        glBindTexture(GL_TEXTURE_2D, texobjectBG);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, teximageBG.width,
+                     teximageBG.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     teximageBG.dataptr);
+        tex_bindingpointBG = glGetUniformLocation(ProgramID, "bg");
+        glUniform1i(tex_bindingpointBG, 1);
+
+
+        //glBindTexture(GL_TEXTURE_2D, texobject);
+        /************************/
+
 
         GLuint texcoordbuffer;
         glGenBuffers(1, &texcoordbuffer);
@@ -240,7 +275,7 @@ void MouseMove(double x, double y)
          rotateAngle1 += RotatingSpeed * -dy;//rotate camera up or down (dy > 0 --> up; dy < 0 --> down)
     }
     if(rightButtonPressed == true){//right button
-         dis += dy*0.01;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
+         dis += dy*0.05;//move camera along the gaze direction (dis > 0 --> away; dis < 0 --> closer)
     }
 }
 
@@ -315,12 +350,15 @@ void OnPaint()
        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
        glEnable(GL_DEPTH_TEST);
 
-
+       glActiveTexture(GL_TEXTURE0);
+       glBindTexture(GL_TEXTURE_2D,texobject);
+       glActiveTexture(GL_TEXTURE1);
+       glBindTexture(GL_TEXTURE_2D,texobjectBG);
        glUniformMatrix4fv(MvpID,1,GL_FALSE,Mvp.data());
        glUniform1f(rotID,rot);
        glUniform1f(spinID,spin);
        glUniform3f(EyeID,EysPos.x(),EysPos.y(),EysPos.z());
-       glDrawArrays(GL_TRIANGLES,0,72);//12 triangles each one has 3 vertices
+       glDrawArrays(GL_TRIANGLES,0,36*3);//12 triangles each one has 3 vertices
 
        glUseProgram(0);
        glBindVertexArray(0);

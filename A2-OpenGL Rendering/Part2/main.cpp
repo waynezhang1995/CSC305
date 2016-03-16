@@ -11,21 +11,6 @@
 #include "data.h"
 #include "loadtexture.h"
 
-unsigned int width = 1024;
-unsigned int height = 1024;
-
-using namespace Eigen;
-using namespace std;
-
-Canvas canvas;
-
-float vppos_x = 0;//cursor position; x coordinate
-float vppos_y = 0;//cursor position; y coordinate
-bool leftButtonPressed = false;//whether left button is pressed
-bool rightButtonPressed = false;//whether right button is pressed
-float lastx = vppos_x;//last cursor position; x coordinate
-float lasty = vppos_y;//last cursor position; y coordiante
-
 const char * vshader_square = "\
 #version 330 core \n \
 in vec3 vnormal;\
@@ -41,49 +26,49 @@ uniform mat4 SmallerCube;\
 uniform float rot;\
 uniform float spin;\
 \
-void RotationMatrix(mat4 UseMvp){\
-if(CubeID == 0){ \
-vec4 temp = UseMvp * vec4(vpoint,1);\
-gl_Position = temp ;\
-interPoint = temp;\
-uv = vtexcoord;\
-normal = vnormal;\
-id = CubeID;\
-}\
-else if(CubeID == 1){ \
-mat4 R = mat4(1);\
-R[3][0] = -7.0*sin(3.141592653*0.5)*sin(rot);\
-R[3][1] = -7.0*cos(3.141592653*0.5);\
-R[3][2] = -7.0*sin(3.141592653*0.5)*cos(rot);\
-mat4 S = mat4(1);\
-S[0][0] =  cos(spin);\
-S[2][0] =  sin(spin);\
-S[0][2] = -sin(spin);\
-S[2][2] =  cos(spin);\
-vec4 temp = UseMvp * SmallerCube * R * S* vec4(vpoint,1);\
-gl_Position =temp ;\
-interPoint = temp;\
-normal = vnormal;\
-uv = vtexcoord;\
-id = CubeID;\
-}else{\
-                                  mat4 S = mat4(1);\
-                                  S[0][0] =  cos(spin);\
-                                  S[2][0] =  sin(spin);\
-                                  S[0][2] = -sin(spin);\
-                                  S[2][2] =  cos(spin);\
-mat4 sky = mat4(100);\
-sky[3][3] = 1;\
-vec4 temp = UseMvp * sky *S* vec4(vpoint,1);\
-gl_Position =temp ;\
-interPoint = temp;\
-uv = vtexcoord;\
-normal = vnormal;\
-id = CubeID;\
-}\
-}\
-void main(){\
-RotationMatrix(UseMvp);}";
+        void RotationMatrix(mat4 UseMvp){\
+        if(CubeID == 0){ \
+        vec4 temp = UseMvp * vec4(vpoint,1);\
+        gl_Position = temp ;\
+        interPoint = temp;\
+        uv = vtexcoord;\
+        normal = vnormal;\
+        id = CubeID;\
+        }\
+        else if(CubeID == 1){ \
+        mat4 R = mat4(1);\
+        R[3][0] = -7.0*sin(3.141592653*0.5)*sin(rot);\
+        R[3][1] = -7.0*cos(3.141592653*0.5);\
+        R[3][2] = -7.0*sin(3.141592653*0.5)*cos(rot);\
+        mat4 S = mat4(1);\
+        S[0][0] =  cos(spin);\
+        S[2][0] =  sin(spin);\
+        S[0][2] = -sin(spin);\
+        S[2][2] =  cos(spin);\
+        vec4 temp = UseMvp * SmallerCube * R * S* vec4(vpoint,1);\
+        gl_Position =temp ;\
+        interPoint = temp;\
+        normal = vnormal;\
+        uv = vtexcoord;\
+        id = CubeID;\
+        }else{\
+        mat4 S = mat4(1);\
+        S[0][0] =  cos(spin);\
+        S[2][0] =  sin(spin);\
+        S[0][2] = -sin(spin);\
+        S[2][2] =  cos(spin);\
+        mat4 sky = mat4(100);\
+        sky[3][3] = 1;\
+        vec4 temp = UseMvp * sky * vec4(vpoint,1);\
+        gl_Position =temp ;\
+        interPoint = temp;\
+        uv = vtexcoord;\
+        normal = vnormal;\
+        id = CubeID;\
+        }\
+        }\
+        void main(){\
+        RotationMatrix(UseMvp);}";
 
         const char * fshader_square = "\
         #version 330 core \n \
@@ -121,28 +106,7 @@ RotationMatrix(UseMvp);}";
         }";
 
 
-
-float rotateAngle = 0 ; //The angle the camera currently rotated
-                        //The angle between cube center and camera in a spherical coordinate
-float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
-float RotatingSpeed = 0.01;
-float rot = M_PI * 0.5;
-float spin = 0;
-float far = -100.0f;
-float near = -1.0f;
-GLuint VertexArrayID = 0;
-GLuint skyID = 0;
-GLuint ProgramID = 0;//the program we wrote
-GLuint MvpID = 0;
-GLuint rotID = 0;
-GLuint spinID = 0;
-GLuint EyeID = 0;
-GLuint tex_bindingpoint;
-GLuint tex_bindingpointBG;
-GLuint texobject;
-GLuint texobjectBG;
-float dis = 3.0;
-
+/* Initialize opengl including array and texture binding */
 void InitializeGL()
 {
         ProgramID = compile_shaders(vshader_square,fshader_square);

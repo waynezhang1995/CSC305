@@ -9,7 +9,6 @@
 #include "Eigen/Dense"
 #include <iostream>
 #include "data.h"
-#include "loadtexture.h"
 
 const char * vshader_square = "\
 #version 330 core \n \

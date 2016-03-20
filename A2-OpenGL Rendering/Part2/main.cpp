@@ -9,6 +9,22 @@
 #include "Eigen/Dense"
 #include <iostream>
 #include "data.h"
+#include "loadtexture.h"
+
+unsigned int width = 650;
+unsigned int height = 650;
+
+using namespace Eigen;
+using namespace std;
+
+Canvas canvas;
+
+float vppos_x = 0;//cursor position; x coordinate
+float vppos_y = 0;//cursor position; y coordinate
+bool leftButtonPressed = false;//whether left button is pressed
+bool rightButtonPressed = false;//whether right button is pressed
+float lastx = vppos_x;//last cursor position; x coordinate
+float lasty = vppos_y;//last cursor position; y coordiante
 
 const char * vshader_square = "\
 #version 330 core \n \
@@ -85,6 +101,7 @@ uniform float spin;\
         vec3 LightPos = vec3(0,0,1.0f);\
         vec4 Lp = vec4(LightPos,1);\
         vec4 LightDir = normalize(interPoint - Lp);\
+        vec4 cubenormal = vec4(normal,0);\
         vec4 n = vec4(normalize(cross(dFdy(interPoint.xyz),dFdx(interPoint.xyz))),0);\
         vec3 tmp = (2*dot(n.xyz,LightDir.xyz)) * n.xyz;\
         vec3 R = normalize(tmp - LightDir.xyz);\
@@ -105,28 +122,51 @@ uniform float spin;\
         }";
 
 
-/* Initialize opengl including array and texture binding */
+
+float rotateAngle = 0 ; //The angle the camera currently rotated
+                        //The angle between cube center and camera in a spherical coordinate
+float rotateAngle1 = M_PI * 0.5; //The angle the camera currently rotated
+float RotatingSpeed = 0.01; //Camera rotation speed
+float rot = M_PI * 0.5; //rotation angle
+float spin = 0; //smaller cube spin angle
+float far = -100.0f; //far plane
+float near = -1.0f; //near plane
+GLuint VertexArrayID = 0; //vertex array buffer ID
+GLuint skyID = 0; //skybox array buffer ID
+GLuint ProgramID = 0;//the program we wrote
+GLuint MvpID = 0; //mvp matrix ID
+GLuint rotID = 0; //rotation angle ID
+GLuint spinID = 0; //spin angle ID
+GLuint EyeID = 0; //camera position ID
+GLuint tex_bindingpoint; //cube texture binding point
+GLuint tex_bindingpointBG; //skybox texture binding point
+GLuint texobject; //cube texture
+GLuint texobjectBG; //skybox texture
+float dis = 3.0; //distance between camera and object
+
 void InitializeGL()
 {
         ProgramID = compile_shaders(vshader_square,fshader_square);
-        glUseProgram(ProgramID);
+        glUseProgram(ProgramID); //using shader program
+        /* get uploaded attribute ID*/
         MvpID = glGetUniformLocation(ProgramID,"UseMvp");
         rotID = glGetUniformLocation(ProgramID,"rot");
         spinID = glGetUniformLocation(ProgramID,"spin");
         EyeID = glGetUniformLocation(ProgramID,"EyeP");
 
-        glGenVertexArrays(1,&VertexArrayID);
+        glGenVertexArrays(1,&VertexArrayID); //generate vertex buffer
         glBindVertexArray(VertexArrayID);
 
         GLuint vertexBufferID;
         glGenBuffers(1,&vertexBufferID);
+        /* bind vertex array*/
         glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
         glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
 
         GLuint vpointid = glGetAttribLocation(ProgramID, "vpoint");
         glEnableVertexAttribArray(vpointid);
         glVertexAttribPointer(vpointid,3,GL_FLOAT,false,0,0);
-
+        /* bind Cube ID array */
         GLuint cubeBufferID;
         glGenBuffers(1,&cubeBufferID);
         glBindBuffer(GL_ARRAY_BUFFER,cubeBufferID);
@@ -135,7 +175,7 @@ void InitializeGL()
         GLuint cube_id = glGetAttribLocation(ProgramID, "CubeID");
         glEnableVertexAttribArray(cube_id);
         glVertexAttribPointer(cube_id, 1, GL_FLOAT, false, 0, 0);
-
+        /* Calculate normal of each cube face */
         float vnormal[36*2*3];
         for(int i =0; i<36*2*3;i+=9){
             Vector3f first = Vector3f(vpoint[i],vpoint[i+1],vpoint[i+2]);
@@ -166,11 +206,11 @@ void InitializeGL()
            GL_FALSE, 0, (void *)0);
 
         glClearDepth(0.0f);
-        glDepthFunc(GL_GREATER);
+        glDepthFunc(GL_GREATER); //depth function
         //glEnable(GL_CULL_FACE);
         //glCullFace(GL_BACK);
 
-        Matrix4f SmallerCube;
+        Matrix4f SmallerCube; //smaller cube scale matrix
         SmallerCube << 0.2, 0, 0, 0,
         0, 0.2, 0, 0,
         0, 0, 0.2, 0,
@@ -178,7 +218,7 @@ void InitializeGL()
 
         glUniformMatrix4fv(glGetUniformLocation(ProgramID, "SmallerCube"), 1, false, SmallerCube.data());
 
-
+        /* Load texture */
         Texture teximage = LoadPNGTexture("texture.png");
         Texture teximageBG = LoadPNGTexture("textureBG.png");
 
@@ -210,12 +250,9 @@ void InitializeGL()
                      teximageBG.dataptr);
         tex_bindingpointBG = glGetUniformLocation(ProgramID, "bg");
         glUniform1i(tex_bindingpointBG, 1);
-
-
-        //glBindTexture(GL_TEXTURE_2D, texobject);
         /************************/
 
-
+        /* Bind UV coordinate */
         GLuint texcoordbuffer;
         glGenBuffers(1, &texcoordbuffer);
         glBindBuffer(GL_ARRAY_BUFFER, texcoordbuffer);
@@ -271,8 +308,6 @@ void KeyPress(char keychar)
 void OnPaint()
 {
     /******************Setting up Mvp***********************/
-
-
        Matrix4f Mvp;
        Matrix4f viewtmp;
        Matrix4f viewrot;
@@ -316,8 +351,8 @@ void OnPaint()
        glUseProgram(ProgramID);
        glBindVertexArray(VertexArrayID);
        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-       glEnable(GL_DEPTH_TEST);
-
+       glEnable(GL_DEPTH_TEST); //enable gl depth function
+       /* Upload attrubutes */
        glActiveTexture(GL_TEXTURE0);
        glBindTexture(GL_TEXTURE_2D,texobject);
        glActiveTexture(GL_TEXTURE1);
@@ -336,11 +371,9 @@ void OnPaint()
 void OnTimer()
 {
     glClearDepth(0.0f);
-
     spin += RotatingSpeed * 10;
     rot += RotatingSpeed;
     //rotateAngle += RotatingSpeed;
-
 }
 
 

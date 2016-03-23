@@ -137,7 +137,7 @@ uniform float spin;\
                  mat4 zoom = mat4(0.02);\
                   zoom[3][3] = 1;\
                  \
-                  vec4 temp = UseMvp * zoom*R*vec4(vertices,1);\
+                  vec4 temp = UseMvp *zoom*R*vec4(vertices,1);\
                   gl_Position = temp ;\
                \
                 }\
@@ -475,7 +475,9 @@ void OnPaint()
        glEnable(GL_DEPTH_TEST); //enable gl depth function
        glUniformMatrix4fv(SphereMvpID,1,GL_FALSE,Mvp.data());
        glUniform1f(SphererotID,rot*2);
-       glDrawArrays(GL_TRIANGLES, 0, stacks*500*2);
+       //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+       //glPolygonMode(GL_FRONT_AND_BACK,GL_TRIANGLES);
+       glDrawArrays(GL_TRIANGLE_FAN, 0, stacks*500*2);
 
        glUseProgram(0);
        glBindVertexArray(0);

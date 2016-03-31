@@ -2,6 +2,8 @@
 #include "object.h"
 #include "common.h"
 #include <iostream>
+
+
 class triangle : public Object
 {
     Vector3 Vertax3;
@@ -99,16 +101,34 @@ public:
              Vector3 PlaneLightVector2 =Minus(Light2, Surface); //L
              PlaneLightVector = Normalize(PlaneLightVector);
              PlaneLightVector2 = Normalize(PlaneLightVector2);
+             Vector3 V =Minus(Surface,Camera);
+             V = Normalize(V);
              Vector3 tmp = Surface;
-             Surface = Normalize(Surface);
+             //Surface = Normalize(Surface);
+
              float PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
              float PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
+            /*********Shadow************/
+             float NewDiscriminant1;
+             float NewDiscriminant2;
+             float NewDiscriminant3;
+             float NewDiscriminant4;
+             Vector3 normal;
+             Vector3 Direction1 =Minus(Light,tmp);
+             Vector3 Direction2 =Minus(Light2,tmp);
+             Direction1 = Normalize(Direction1);
+             Direction2 = Normalize(Direction2);
+
+        if(flag >= 90){
              for(int i =0;i<pObjectList.size();++i){     //calculate shadow for each sphere
                  if(pObjectList[i]->getflag() < 10 && flag != 96){
-                    float NewDiscriminant = shadowSphere(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light);
-                    float NewDiscriminant2 = shadowSphere(tmp,pObjectList[i]->getCenter(),pObjectList[i]->getRadius(),Light2);
 
-                    if(NewDiscriminant > 0){  //intersect to one of the three spheres --> Blocked !
+                     bool DoesIntersect1 = pObjectList[i]->Intersect(tmp, Direction1,
+                                                                  &NewDiscriminant1, &normal);
+                     bool DoesIntersect2 = pObjectList[i]->Intersect(tmp, Direction2,
+                                                                  &NewDiscriminant2, &normal);
+
+                    if(DoesIntersect1){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                         }
@@ -121,7 +141,7 @@ public:
                         return shade;
                     }
 
-                    if(NewDiscriminant2 > 0){  //intersect to one of the three spheres --> Blocked !
+                    if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
                         if(PlaneDiffuseTerm > 0){
                             PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                         }
@@ -132,9 +152,88 @@ public:
                         PixelColour = MultiplyScalar(PixelColour,0.125);
                         SetColor(shade, PixelColour);
                         return shade;
+                    }
+              }else if(pObjectList[i]->getflag() > 10  && flag != 96 && pObjectList[i]->getflag()!= 52 && pObjectList[i]->getflag() < 60){
+                     bool DoesIntersect1 = pObjectList[i]->Intersect(tmp, Direction1,
+                                                                  &NewDiscriminant3, &normal);
+                     bool DoesIntersect2 = pObjectList[i]->Intersect(tmp, Direction2,
+                                                                  &NewDiscriminant4, &normal);
+
+                    if(DoesIntersect1){  //intersect to one of the three spheres --> Blocked !
+                        if(PlaneDiffuseTerm > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
+                        }
+
+                        if(PlaneDiffuseTerm2 > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
+                        }
+                        PixelColour = MultiplyScalar(PixelColour,0.125);
+                        SetColor(shade, PixelColour);
+                        return shade;
+                    }
+
+                    if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
+                        if(PlaneDiffuseTerm > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
+                        }
+
+                        if(PlaneDiffuseTerm2 > 0){
+                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
+                        }
+                        PixelColour = MultiplyScalar(PixelColour,0.125);
+                        SetColor(shade, PixelColour);
+                        return shade;
+                    }
+                 }
+             }
+    }
+            /*******************************/
+        if(flag > 10 && flag < 90 ){
+            Pixel shade2;
+            int index = 0;
+            bool HasIntersection = false;
+            float t_min = 999999;
+            Vector3 Normal_min;
+            Vector3 priRayDir = Direction;
+            //priRayDir = MultiplyScalar(priRayDir,-1);
+            Vector3 SecondaryRay = MultiplyScalar(Normal,2 * -DotProduct(Normal,priRayDir));
+            SecondaryRay = Add(SecondaryRay,priRayDir);
+            SecondaryRay = Normalize(SecondaryRay); //new direction
+
+            for(int i =0;i<pObjectList.size();++i){
+                if(pObjectList[i]->getflag() >= 90 || pObjectList[i]->getflag() <= 10 ){
+                    float t2;
+                    Vector3 normal2;
+                    bool DoesIntersect = pObjectList[i]->Intersect(Surface, SecondaryRay,
+                                                                 &t2, &normal2);
+                    if (DoesIntersect)
+                    {
+                        HasIntersection = true;
+                        if (t_min > t2)
+                        {
+                            index = i;
+                            t_min = t2;
+                            Normal_min = normal2;
+                        }
                     }
                 }
-             }
+            }
+
+            if (HasIntersection)
+            {
+                Vector3 Intersection = MultiplyScalar(SecondaryRay, t_min);
+                Intersection = Add(Intersection, Surface);
+                shade2 = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
+            }//if t > 0
+
+            else //No Intersection, set background colour
+            {
+                SetColor(shade2, BackgroundColor);
+            }
+
+            return shade2;
+
+            }else{
                 if(PlaneDiffuseTerm > 0){
                     PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
                 }
@@ -146,21 +245,9 @@ public:
                 SetColor(shade, PixelColour);
 
                  return shade;
+                }
         }
 
-        float shadowSphere(Vector3 planeintersection,Vector3 SphereCenter,float SphereRadius,Vector3 Light){
 
-            Vector3 Camera = planeintersection;      //define a new camera point = ray-plane intersection point
-            Vector3 NewDirection = Minus(Light,Camera);//ray-plane intersection point to light
-            float len1 = sqrt(NewDirection.x*NewDirection.x+NewDirection.y*NewDirection.y+NewDirection.z*NewDirection.z);
-            NewDirection = Normalize(NewDirection);
-            Vector3 NewOC = Minus(Camera, SphereCenter);
-            float len2 = sqrt(NewOC.x*NewOC.x+NewOC.y*NewOC.y+NewOC.z*NewOC.z);
-            float NewD_Dot_OC = DotProduct(NewDirection,NewOC);
-            float NewOCSqure = DotProduct(NewOC,NewOC);
-            if(len2 > len1){
-                return -1;
-            }
-            return (SphereRadius*SphereRadius) - NewOCSqure + NewD_Dot_OC * NewD_Dot_OC;
-        }
+
 };

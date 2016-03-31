@@ -4,6 +4,7 @@
 #include <cmath>
 #include "object.h"
 #include "common.h"
+#include "refrasphere.h"
 #include <iostream>
 
 class mirrorsphere : public Object

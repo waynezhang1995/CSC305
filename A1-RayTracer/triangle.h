@@ -80,14 +80,14 @@ public:
         return PixelColour;
     }
 
-    virtual Pixel DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
+    virtual Vector3 DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
     {
              Pixel shade;
              Vector3 PixelColour = AmbientColour;
              int blackOrWhite = -1;
              float result = abs((int)Surface.x/50%2);
              float result1 = abs((int)Surface.z/50%2);
-
+             Vector3 Colour;
              if(result == result1  ){
                  blackOrWhite = 1;
              }
@@ -137,8 +137,8 @@ public:
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
                         PixelColour = MultiplyScalar(PixelColour,0.125);
-                        SetColor(shade, PixelColour);
-                        return shade;
+                        //SetColor(shade, PixelColour);
+                        return PixelColour;
                     }
 
                     if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
@@ -150,8 +150,8 @@ public:
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
                         PixelColour = MultiplyScalar(PixelColour,0.125);
-                        SetColor(shade, PixelColour);
-                        return shade;
+                        //SetColor(shade, PixelColour);
+                        return PixelColour;
                     }
               }else if(pObjectList[i]->getflag() > 10  && flag != 96 && pObjectList[i]->getflag()!= 52 && pObjectList[i]->getflag() < 60){
                      bool DoesIntersect1 = pObjectList[i]->Intersect(tmp, Direction1,
@@ -168,8 +168,8 @@ public:
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
                         PixelColour = MultiplyScalar(PixelColour,0.125);
-                        SetColor(shade, PixelColour);
-                        return shade;
+                        //SetColor(shade, PixelColour);
+                        return PixelColour;
                     }
 
                     if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
@@ -181,8 +181,8 @@ public:
                             PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                         }
                         PixelColour = MultiplyScalar(PixelColour,0.125);
-                        SetColor(shade, PixelColour);
-                        return shade;
+                        //SetColor(shade, PixelColour);
+                       return PixelColour;
                     }
                  }
              }
@@ -190,6 +190,7 @@ public:
             /*******************************/
         if(flag > 10 && flag < 90 ){
             Pixel shade2;
+            Vector3 Colour2;
             int index = 0;
             bool HasIntersection = false;
             float t_min = 999999;
@@ -223,15 +224,16 @@ public:
             {
                 Vector3 Intersection = MultiplyScalar(SecondaryRay, t_min);
                 Intersection = Add(Intersection, Surface);
-                shade2 = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
+                Colour2 = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
+
             }//if t > 0
 
             else //No Intersection, set background colour
             {
-                SetColor(shade2, BackgroundColor);
+                return BackgroundColor;
             }
 
-            return shade2;
+            return Colour2;
 
             }else{
                 if(PlaneDiffuseTerm > 0){
@@ -242,9 +244,9 @@ public:
                     PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
                 }
                 PixelColour = MultiplyScalar(PixelColour,0.5);
-                SetColor(shade, PixelColour);
+               // SetColor(shade, PixelColour);
 
-                 return shade;
+                 return PixelColour;
                 }
         }
 

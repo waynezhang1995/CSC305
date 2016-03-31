@@ -52,10 +52,11 @@ public:
         }
     }
 
-    virtual Pixel DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
+    virtual Vector3 DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
     {
 
         Pixel shade;
+        Vector3 Colour;
         int index = 0;
         bool HasIntersection = false;
         float t_min = 999999;
@@ -91,15 +92,16 @@ public:
         {
             Vector3 Intersection = MultiplyScalar(SecondaryRay, t_min);
             Intersection = Add(Intersection, Surface);
-            shade = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
+            Colour = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),SecondaryRay,Intersection, Normal_min,pObjectList);
+
         }//if t > 0
 
         else //No Intersection, set background colour
         {
-            SetColor(shade, BackgroundColor);
+            return BackgroundColor;
         }
 
-        return shade;
+        return Colour;
     }
 
 

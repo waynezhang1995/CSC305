@@ -3,10 +3,51 @@
 #include "Image.h"
 #include <vector>
 #include "sphere.h"
-//#include "floor.h"
 #include "mirrorsphere.h"
 #include <iostream>
 #include "triangle.h"
+
+
+Vector3 TraceRay(Vector3 Direction,std::vector<Object *> pObjectList){
+    Vector3 Colour;
+    float t_min = 999999;
+    Vector3 Normal_min;
+    bool HasIntersection = false;
+    int index;
+    //Intersect with the list of objects
+    for (int k = 0; k < pObjectList.size(); ++ k)
+    {
+
+        float t;
+        Vector3 normal;
+        bool DoesIntersect = pObjectList[k]->Intersect(Camera, Direction,
+                                                     &t, &normal);
+        if (DoesIntersect)
+        {
+            HasIntersection = true;
+            if (t_min > t)
+            {
+                index = k;
+                t_min = t;
+                Normal_min = normal;
+            }
+        }
+    }
+
+    if (HasIntersection)
+    {
+
+        Vector3 Intersection = MultiplyScalar(Direction, t_min);
+        Intersection = Add(Intersection, Camera);
+        Colour = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),Direction,Intersection, Normal_min,pObjectList);
+        return Colour;
+    }//if t > 0
+    else //No Intersection, set background colour
+    {
+        return BackgroundColor;
+    }
+}
+
 void RayTraceSphere(Image * pImage)
 {
     std::vector<Object *> pObjectList;
@@ -87,48 +128,34 @@ void RayTraceSphere(Image * pImage)
 		{
             //Set up the ray we're tracing: R = O + tD;
             Pixel px;
-            Vector3 PixelPosition((float)i, (float)j, 0);
-            Vector3 Direction = Minus(PixelPosition, Camera);
-            Direction = Normalize(Direction);
+            Vector3 Colour(0.0f,0.0f,0.0f);
+            if(i == 0 || j == 0 || i == 1000 || j == 1000){
+                 Vector3 PixelPosition((float)i, (float)j, 0);
+                 Vector3 Direction = Normalize(Minus(PixelPosition, Camera));
+                 Vector3 ColourEdge = TraceRay(Direction,pObjectList);
+                 SetColor(px,ColourEdge);
+                 (*pImage)(i, 1000-j) = px;  //change origin
+            }else{
 
-            float t_min = 999999;
-            Vector3 Normal_min;
-            bool HasIntersection = false;
-            int index;
-            //Intersect with the list of objects
-            for (int k = 0; k < pObjectList.size(); ++ k)
-            {
+                Vector3 PixelPosition1((float)i+0.25, (float)j+0.25, 0);
+                Vector3 PixelPosition2((float)i-0.25, (float)j+0.25, 0);
+                Vector3 PixelPosition3((float)i-0.25, (float)j-0.25, 0);
+                Vector3 PixelPosition4((float)i+0.25, (float)j-0.25, 0);
 
-                float t;
-                Vector3 normal;
-                bool DoesIntersect = pObjectList[k]->Intersect(Camera, Direction,
-                                                             &t, &normal);
-                if (DoesIntersect)
-                {
-                    HasIntersection = true;
-                    if (t_min > t)
-                    {
-                        index = k;
-                        t_min = t;
-                        Normal_min = normal;
-                    }
-                }
+                Vector3 Direction1 = Normalize(Minus(PixelPosition1, Camera));
+                Vector3 Direction2 = Normalize(Minus(PixelPosition2, Camera));
+                Vector3 Direction3 = Normalize(Minus(PixelPosition3, Camera));
+                Vector3 Direction4 = Normalize(Minus(PixelPosition4, Camera));
+
+                Colour = Add(Colour,TraceRay(Direction1,pObjectList));
+                Colour = Add(Colour,TraceRay(Direction2,pObjectList));
+                Colour = Add(Colour,TraceRay(Direction3,pObjectList));
+                Colour = Add(Colour,TraceRay(Direction4,pObjectList));
+                Colour = MultiplyScalar(Colour,0.25f);
+                SetColor(px,Colour);
+                (*pImage)(i, 1000-j) = px;  //change origin
             }
-
-            if (HasIntersection)
-            {
-
-                Vector3 Intersection = MultiplyScalar(Direction, t_min);
-				Intersection = Add(Intersection, Camera);
-                px = pObjectList[index]->DiffuseShade(pObjectList[index]->getflag(),Direction,Intersection, Normal_min,pObjectList);
-
-
-            }//if t > 0
-			else //No Intersection, set background colour
-			{
-                SetColor(px, BackgroundColor);
-			}
-			 
-            (*pImage)(i, 1000-j) = px;  //change origin
 		}
 }
+
+

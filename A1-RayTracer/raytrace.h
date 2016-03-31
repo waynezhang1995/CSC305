@@ -10,26 +10,11 @@
 void RayTraceSphere(Image * pImage)
 {
     std::vector<Object *> pObjectList;
-    /*
-     * Flag!!
-     *
-     * 1 = sphere;
-     * 2 = mirror sphere
-     *
-     * 99 = left wall
-     * 100 = bottom floor
-     * 98 = right wall
-     * 97 = back wall
-     * 96 = top wall
-     *
-     */
 
-    Sphere sphere(Vector3(200, 35,100), //
-                  35,1);//radius
-    mirrorsphere sphereRefl(Vector3(700, 200, 700), //center
-                  200,2);//radius
-    Sphere sphere2(Vector3(700, 75, 200), //center
-                  75,1);//radius
+    Sphere sphere(Vector3(200, 35,100),35,1);//radius
+    Sphere sphere2(Vector3(400,45,750),45,1);//radius
+    refrasphere sphereR(Vector3(800, 100, 500),100,6);//radius
+    mirrorsphere sphereRefl(Vector3(500, 70, 300),70,2);
 
     triangle BotLeft(Vector3(0,0,1000),Vector3(1000,0,0),Vector3(0,0,0),100,Vector3(0,1,0),yellow);
     triangle BotRight(Vector3(1000,0,1000),Vector3(1000,0,0),Vector3(0,0,1000),100,Vector3(0,1,0),yellow);
@@ -78,8 +63,9 @@ void RayTraceSphere(Image * pImage)
     pObjectList.push_back(&RightRight);
 
     pObjectList.push_back(&sphere);
-    pObjectList.push_back(&sphereRefl);
     pObjectList.push_back(&sphere2);
+    pObjectList.push_back(&sphereR);
+    pObjectList.push_back(&sphereRefl);
 
     pObjectList.push_back(&CubeTopLeft);
     pObjectList.push_back(&CubeTopRight);

@@ -1,0 +1,4 @@
+#ifndef REFRASPHERE_H
+#define REFRASPHERE_H
+
+#endif // REFRASPHERE_H

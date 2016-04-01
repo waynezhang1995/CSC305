@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-#ifndef REFRASPHERE_H
-#define REFRASPHERE_H
 
-#endif // REFRASPHERE_H
-=======
 #pragma once
 #include <math.h>
 #include <tgmath.h>
@@ -113,4 +108,4 @@ public:
 
 };
 
->>>>>>> efec10a5922da77510033e53a3259be9c13f67e3
+

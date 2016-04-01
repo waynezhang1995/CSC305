@@ -8,6 +8,7 @@
 #include "triangle.h"
 
 
+
 Vector3 TraceRay(Vector3 Direction,std::vector<Object *> pObjectList){
     Vector3 Colour;
     float t_min = 999999;
@@ -46,6 +47,14 @@ Vector3 TraceRay(Vector3 Direction,std::vector<Object *> pObjectList){
     {
         return BackgroundColor;
     }
+}
+
+Vector3 randomVector(){
+
+    float x = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+    float y = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+
+    return Vector3((x - 0.5f) / 2.0f, (y - 0.5f) / 2.0f, 0.0f);
 }
 
 void RayTraceSphere(Image * pImage)
@@ -123,12 +132,16 @@ void RayTraceSphere(Image * pImage)
 
 
 
+       //static_cast <float> (rand()) / static_cast <float> (RAND_MAX);       // <--- Gives 0->1 Float
+
     for (int i = 0; i < 1000; ++ i)
         for (int j = 0; j < 1000; ++j)
 		{
+
             //Set up the ray we're tracing: R = O + tD;
             Pixel px;
             Vector3 Colour(0.0f,0.0f,0.0f);
+            Vector3 Colour2(0.0f,0.0f,0.0f);
             if(i == 0 || j == 0 || i == 1000 || j == 1000){
                  Vector3 PixelPosition((float)i, (float)j, 0);
                  Vector3 Direction = Normalize(Minus(PixelPosition, Camera));
@@ -136,11 +149,14 @@ void RayTraceSphere(Image * pImage)
                  SetColor(px,ColourEdge);
                  (*pImage)(i, 1000-j) = px;  //change origin
             }else{
+                float a = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 
-                Vector3 PixelPosition1((float)i+0.25, (float)j+0.25, 0);
-                Vector3 PixelPosition2((float)i-0.25, (float)j+0.25, 0);
-                Vector3 PixelPosition3((float)i-0.25, (float)j-0.25, 0);
-                Vector3 PixelPosition4((float)i+0.25, (float)j-0.25, 0);
+                /* Jitterd */
+                Vector3 PixelPosition((float)i, (float)j, 0);
+                Vector3 PixelPosition1 = Add(PixelPosition, Vector3(-0.25, -0.25, 0));
+                Vector3 PixelPosition2 = Add(PixelPosition, Vector3(0.25, -0.25, 0));
+                Vector3 PixelPosition3 = Add(PixelPosition, Vector3(-0.25, 0.25, 0));
+                Vector3 PixelPosition4 = Add(PixelPosition, Vector3(0.25, 0.25, 0));
 
                 Vector3 Direction1 = Normalize(Minus(PixelPosition1, Camera));
                 Vector3 Direction2 = Normalize(Minus(PixelPosition2, Camera));
@@ -152,6 +168,7 @@ void RayTraceSphere(Image * pImage)
                 Colour = Add(Colour,TraceRay(Direction3,pObjectList));
                 Colour = Add(Colour,TraceRay(Direction4,pObjectList));
                 Colour = MultiplyScalar(Colour,0.25f);
+
                 SetColor(px,Colour);
                 (*pImage)(i, 1000-j) = px;  //change origin
             }

@@ -62,7 +62,7 @@ public:
         return PixelColour;
     }
 
-    virtual Pixel DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
+    virtual Vector3 DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
     {
         //These colours will give the sphere a red appearance
         Pixel shade;
@@ -94,7 +94,7 @@ public:
         Vector3 specular2 = SpecularShade(Normal,LightVector2,V,PixelColour);
 
         PixelColour = MultiplyScalar(Add(specular1,specular2),0.5);
-        SetColor(shade, PixelColour);
-        return shade;
+       // SetColor(shade, PixelColour);
+        return PixelColour;
     }
 };

@@ -11,7 +11,8 @@ Basic operation:
  
  More details in A2-part1 spec.
  
-##Part 2
+##Part 2:
+Cube !! Skybox !! check it out
 
 ## ImageKit Update 1
 This project implements teaching frameworks for an introductory computer graphics course.

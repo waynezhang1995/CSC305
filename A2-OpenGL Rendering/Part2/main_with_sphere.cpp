@@ -11,8 +11,8 @@
 #include "data.h"
 #include "loadtexture.h"
 
-unsigned int width = 1024;
-unsigned int height = 1024;
+unsigned int width = 650;
+unsigned int height =650;
 
 using namespace Eigen;
 using namespace std;
@@ -121,7 +121,37 @@ uniform float spin;\
         }\
         }";
 
+        ///////////////////////////////
+        const char * vshader_sphere = "\
+        #version 330 core \n \
+        in vec3 vertices;\
+        uniform mat4 UseMvp;\
+        uniform float rot;\
+        \
+                void RotationMatrix(mat4 UseMvp){\
+                                    \
+                  mat4 R = mat4(1);\
+                  R[3][0] = -50.0*sin(3.141592653*0.5)*sin(-rot);\
+                  R[3][1] = -50.0*cos(3.141592653*0.5);\
+                  R[3][2] = -50.0*sin(3.141592653*0.5)*cos(-rot);\
+                 mat4 zoom = mat4(0.02);\
+                  zoom[3][3] = 1;\
+                 \
+                  vec4 temp = UseMvp *zoom*R*vec4(vertices,1);\
+                  gl_Position = temp ;\
+               \
+                }\
+                void main(){\
+                RotationMatrix(UseMvp);}";
 
+                const char * fshader_sphere = "\
+                #version 330 core \n \
+                out vec3 color;\
+                void main(){\
+               \
+                color = vec3(1.0f,0,0);\
+                \
+                }";
 
 float rotateAngle = 0 ; //The angle the camera currently rotated
                         //The angle between cube center and camera in a spherical coordinate
@@ -132,10 +162,14 @@ float spin = 0; //smaller cube spin angle
 float far = -100.0f; //far plane
 float near = -1.0f; //near plane
 GLuint VertexArrayID = 0; //vertex array buffer ID
+GLuint SphereArrayID = 0;
 GLuint skyID = 0; //skybox array buffer ID
 GLuint ProgramID = 0;//the program we wrote
+GLuint SphereProgramID = 0;
 GLuint MvpID = 0; //mvp matrix ID
+GLuint SphereMvpID = 0; //mvp matrix ID
 GLuint rotID = 0; //rotation angle ID
+GLuint SphererotID = 0; //rotation angle ID
 GLuint spinID = 0; //spin angle ID
 GLuint EyeID = 0; //camera position ID
 GLuint tex_bindingpoint; //cube texture binding point
@@ -143,9 +177,12 @@ GLuint tex_bindingpointBG; //skybox texture binding point
 GLuint texobject; //cube texture
 GLuint texobjectBG; //skybox texture
 float dis = 3.0; //distance between camera and object
+GLfloat vertices[500 * 500*3*2];
+int stacks = 500;
 
 void InitializeGL()
 {
+
         ProgramID = compile_shaders(vshader_square,fshader_square);
         glUseProgram(ProgramID); //using shader program
         /* get uploaded attribute ID*/
@@ -162,7 +199,7 @@ void InitializeGL()
         /* bind vertex array*/
         glBindBuffer(GL_ARRAY_BUFFER,vertexBufferID);
         glBufferData(GL_ARRAY_BUFFER,sizeof(vpoint),vpoint,GL_STATIC_DRAW);
-    
+
         GLuint vpointid = glGetAttribLocation(ProgramID, "vpoint");
         glEnableVertexAttribArray(vpointid);
         glVertexAttribPointer(vpointid,3,GL_FLOAT,false,0,0);
@@ -209,7 +246,7 @@ void InitializeGL()
         glDepthFunc(GL_GREATER); //depth function
         //glEnable(GL_CULL_FACE);
         //glCullFace(GL_BACK);
-    
+
         Matrix4f SmallerCube; //smaller cube scale matrix
         SmallerCube << 0.2, 0, 0, 0,
         0, 0.2, 0, 0,
@@ -263,6 +300,71 @@ void InitializeGL()
         glEnableVertexAttribArray(texcoordBindingPosition);
         glVertexAttribPointer(texcoordBindingPosition, 2, GL_FLOAT,
                               GL_FALSE, 0, (void *)0);
+
+
+        SphereProgramID = compile_shaders(vshader_sphere,fshader_sphere);
+        glUseProgram(SphereProgramID); //using shader program
+        glClearDepth(0.0f);
+        glDepthFunc(GL_GREATER); //depth function
+        SphereMvpID = glGetUniformLocation(SphereProgramID,"UseMvp");
+        SphererotID = glGetUniformLocation(SphereProgramID,"rot");
+        glGenVertexArrays(1,&SphereArrayID); //generate vertex buffer
+        glBindVertexArray(SphereArrayID);
+        GLfloat slices = 2.0 * M_PI / (float)(100);
+        float r = 10.0f;
+        for(int i = 0; i < stacks; i++)
+        {
+
+            for(int j = 0;j<500;j++)
+            {
+                vertices[3*500*i+(3 * j + 0)] = sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * cos(j * slices);            //x
+                vertices[3*500*i+(3 * j + 1)] =  1.0 * (j % 2 == 0 ? -r/stacks+r*2/stacks*i : r/stacks+r*2/stacks*i); //y
+                vertices[3*500*i+(3 * j + 2)] = sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * sin((j * slices + 0.5 * slices)); //z
+            }
+
+        }
+
+        for(int i = 0; i < stacks; i++)
+        {
+
+            for(int j = 0;j<500;j++)
+            {
+                /*
+                Vector3f tmp(sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * cos(j * slices),1.0 * (j % 2 == 0 ? -r/stacks+r*2/stacks*i : r/stacks+r*2/stacks*i),sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * sin((j * slices + 0.5 * slices)));
+                Matrix3f c;
+
+                c<<0,-1,0,
+                   1,0,0,
+                   0,0,1;
+
+                Vector3f afterrotate = c * tmp;
+                vertices[stacks*500*3 + 3*500*i+(3 * j + 0)] = afterrotate.x();            //x
+                vertices[stacks*500*3 + 3*500*i+(3 * j + 1)] = afterrotate.y(); //y
+                vertices[stacks*500*3 + 3*500*i+(3 * j + 2)] = afterrotate.z(); //z
+                */
+                //vertices[stacks*500*3 +3*500*i+(3 * j + 0)] = sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * cos(j * slices);            //x
+                //vertices[stacks*500*3 +3*500*i+(3 * j + 2)] =  1.0 * (j % 2 == 0 ? -r/stacks+r*2/stacks*i : r/stacks+r*2/stacks*i); //y
+                //vertices[stacks*500*3 +3*500*i+(3 * j + 1)] = sqrt(r*r - (r - r*2/stacks*i)*(r - r*2/stacks*i)) * sin((j * slices + 0.5 * slices)); //z
+            }
+
+        }
+
+
+        //cout<<vertices[500 * 500*3]<<endl;
+
+        GLuint spherebuffer;
+        glGenBuffers(1, &spherebuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, spherebuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+                     GL_STATIC_DRAW);
+        GLuint sphereBindingPosition = glGetAttribLocation(SphereProgramID,
+                                                           "vertices");
+        glEnableVertexAttribArray(sphereBindingPosition);
+        glVertexAttribPointer(sphereBindingPosition, 3, GL_FLOAT,
+                              GL_FALSE, 0, (void *)0);
+
+
+
 
 }
 
@@ -349,12 +451,14 @@ void OnPaint()
 
        Mvp = Orth * perspective * view;
        /*******************End**********************/
+       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+       glEnable(GL_DEPTH_TEST); //enable gl depth function
 
        glUseProgram(ProgramID);
        glBindVertexArray(VertexArrayID);
-       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-       glEnable(GL_DEPTH_TEST); //enable gl depth function
-       /* Upload attrubutes */
+              //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+              //glEnable(GL_DEPTH_TEST); //enable gl depth function
+
        glActiveTexture(GL_TEXTURE0);
        glBindTexture(GL_TEXTURE_2D,texobject);
        glActiveTexture(GL_TEXTURE1);
@@ -365,6 +469,16 @@ void OnPaint()
        glUniform3f(EyeID,EysPos.x(),EysPos.y(),EysPos.z());
        glDrawArrays(GL_TRIANGLES,0,36*3);//12 triangles each one has 3 vertices
 
+
+       glUseProgram(SphereProgramID);
+       glBindVertexArray(SphereArrayID);
+       glEnable(GL_DEPTH_TEST); //enable gl depth function
+       glUniformMatrix4fv(SphereMvpID,1,GL_FALSE,Mvp.data());
+       glUniform1f(SphererotID,rot*2);
+       //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+       //glPolygonMode(GL_FRONT_AND_BACK,GL_TRIANGLES);
+       glDrawArrays(GL_TRIANGLE_FAN, 0, stacks*500*2);
+
        glUseProgram(0);
        glBindVertexArray(0);
 
@@ -374,8 +488,8 @@ void OnTimer()
 {
     glClearDepth(0.0f);
 
-    spin += RotatingSpeed * 10;
-    rot += RotatingSpeed;
+    spin += RotatingSpeed * 15;
+    rot += RotatingSpeed*5;
     //rotateAngle += RotatingSpeed;
 
 }

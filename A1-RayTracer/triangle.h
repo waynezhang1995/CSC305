@@ -12,6 +12,16 @@ class triangle : public Object
     Vector3 TriangleNormal;
     Vector3 TriangleColor;
     int flag;
+    float PlaneDiffuseTerm;
+    float PlaneDiffuseTerm2;
+    float PlaneDiffuseTerm3;
+    float PlaneDiffuseTerm4;
+    float PlaneDiffuseTerm5;
+    float PlaneDiffuseTerm6;
+    float PlaneDiffuseTerm7;
+    float PlaneDiffuseTerm8;
+    float PlaneDiffuseTerm9;
+
 public:
     triangle(Vector3 Vertax3_in, Vector3 Vertax2_in,Vector3 Vertax1_in,int flag_in, Vector3 TriangleNormal_in,Vector3 TriangleColor_in)
     {
@@ -21,6 +31,17 @@ public:
         TriangleNormal = TriangleNormal_in;
         TriangleColor = TriangleColor_in;
         flag = flag_in;
+        PlaneDiffuseTerm = 0;
+        PlaneDiffuseTerm2 = 0;
+        PlaneDiffuseTerm3 = 0;
+        PlaneDiffuseTerm4 = 0;
+        PlaneDiffuseTerm5 = 0;
+        PlaneDiffuseTerm6 = 0;
+        PlaneDiffuseTerm7 = 0;
+        PlaneDiffuseTerm8 = 0;
+        PlaneDiffuseTerm9 = 0;
+
+
     }
     virtual Vector3 getCenter(){return Vertax3;}
     virtual float getRadius(){}
@@ -80,6 +101,39 @@ public:
         return PixelColour;
     }
 
+    Vector3 CalculatePlaneColour(int flag,Vector3 PixelColour,int blackOrWhite){
+        if(PlaneDiffuseTerm > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm2 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm3 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm3,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm4 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm4,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm5 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm5,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm6 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm6,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm7 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm7,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm8 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm8,PixelColour,blackOrWhite);
+        }
+        if(PlaneDiffuseTerm9 > 0){
+            PixelColour = addcolour(flag,PlaneDiffuseTerm9,PixelColour,blackOrWhite);
+        }
+
+        PixelColour = MultiplyScalar(PixelColour,1.0f/9.0f);
+         return PixelColour;
+    }
+
     virtual Vector3 DiffuseShade(int flag,Vector3 Direction,Vector3 Surface, Vector3 Normal,std::vector<Object *> pObjectList)
     {
              Pixel shade;
@@ -99,94 +153,204 @@ public:
              }
              Vector3 PlaneLightVector =Minus(Light, Surface); //L
              Vector3 PlaneLightVector2 =Minus(Light2, Surface); //L
+             Vector3 PlaneLightVector3 =Minus(Light3, Surface); //L
+
+             Vector3 PlaneLightVector4 =Minus(Light4, Surface); //L
+             Vector3 PlaneLightVector5 =Minus(Light5, Surface); //L
+             Vector3 PlaneLightVector6 =Minus(Light6, Surface); //L
+
+             Vector3 PlaneLightVector7 =Minus(Light7, Surface); //L
+             Vector3 PlaneLightVector8 =Minus(Light8, Surface); //L
+             Vector3 PlaneLightVector9 =Minus(Light9, Surface); //L
+
              PlaneLightVector = Normalize(PlaneLightVector);
              PlaneLightVector2 = Normalize(PlaneLightVector2);
+             PlaneLightVector3 = Normalize(PlaneLightVector3);
+
+             PlaneLightVector4 = Normalize(PlaneLightVector4);
+             PlaneLightVector5 = Normalize(PlaneLightVector5);
+             PlaneLightVector6 = Normalize(PlaneLightVector6);
+
+             PlaneLightVector7 = Normalize(PlaneLightVector7);
+             PlaneLightVector8 = Normalize(PlaneLightVector8);
+             PlaneLightVector9 = Normalize(PlaneLightVector9);
+
              Vector3 V =Minus(Surface,Camera);
              V = Normalize(V);
              Vector3 tmp = Surface;
-             //Surface = Normalize(Surface);
 
-             float PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
-             float PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
+              PlaneDiffuseTerm = DotProduct(Normal,PlaneLightVector);
+              PlaneDiffuseTerm2 = DotProduct(Normal,PlaneLightVector2);
+              PlaneDiffuseTerm3 = DotProduct(Normal,PlaneLightVector3);
+
+              PlaneDiffuseTerm4 = DotProduct(Normal,PlaneLightVector4);
+              PlaneDiffuseTerm5 = DotProduct(Normal,PlaneLightVector5);
+              PlaneDiffuseTerm6 = DotProduct(Normal,PlaneLightVector6);
+
+              PlaneDiffuseTerm7 = DotProduct(Normal,PlaneLightVector7);
+              PlaneDiffuseTerm8 = DotProduct(Normal,PlaneLightVector8);
+              PlaneDiffuseTerm9 = DotProduct(Normal,PlaneLightVector9);
+
+              Vector3 PlaneColour = CalculatePlaneColour(flag,PixelColour,blackOrWhite);
+
             /*********Shadow************/
              float NewDiscriminant1;
              float NewDiscriminant2;
              float NewDiscriminant3;
              float NewDiscriminant4;
+             float NewDiscriminant5;
+             float NewDiscriminant6;
+             float NewDiscriminant7;
+             float NewDiscriminant8;
+             float NewDiscriminant9;
+
              Vector3 normal;
              Vector3 Direction1 =Minus(Light,tmp);
              Vector3 Direction2 =Minus(Light2,tmp);
+             Vector3 Direction3 =Minus(Light3,tmp);
+
+             Vector3 Direction4 =Minus(Light4,tmp);
+             Vector3 Direction5 =Minus(Light5,tmp);
+             Vector3 Direction6 =Minus(Light6,tmp);
+
+             Vector3 Direction7 =Minus(Light7,tmp);
+             Vector3 Direction8 =Minus(Light8,tmp);
+             Vector3 Direction9 =Minus(Light9,tmp);
+
              Direction1 = Normalize(Direction1);
              Direction2 = Normalize(Direction2);
+             Direction3 = Normalize(Direction3);
+
+             Direction4 = Normalize(Direction4);
+             Direction5 = Normalize(Direction5);
+             Direction6 = Normalize(Direction6);
+
+             Direction7 = Normalize(Direction7);
+             Direction8 = Normalize(Direction8);
+             Direction9 = Normalize(Direction9);
+
+
+
 
         if(flag >= 90){
              for(int i =0;i<pObjectList.size();++i){     //calculate shadow for each sphere
-                 if(pObjectList[i]->getflag() < 10 && flag != 96){
+                 Vector3 SoftShadow1(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow2(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow3(0.0f,0.0f,0.0f);
+
+                 Vector3 SoftShadow4(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow5(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow6(0.0f,0.0f,0.0f);
+
+                 Vector3 SoftShadow7(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow8(0.0f,0.0f,0.0f);
+                 Vector3 SoftShadow9(0.0f,0.0f,0.0f);
+
+                 if(pObjectList[i]->getflag() < 90 && flag != 96 && pObjectList[i]->getflag()!= 52){
+                     int count = 0;
 
                      bool DoesIntersect1 = pObjectList[i]->Intersect(tmp, Direction1,
                                                                   &NewDiscriminant1, &normal);
                      bool DoesIntersect2 = pObjectList[i]->Intersect(tmp, Direction2,
                                                                   &NewDiscriminant2, &normal);
-
-                    if(DoesIntersect1){  //intersect to one of the three spheres --> Blocked !
-                        if(PlaneDiffuseTerm > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
-                        }
-
-                        if(PlaneDiffuseTerm2 > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
-                        }
-                        PixelColour = MultiplyScalar(PixelColour,0.125);
-                        //SetColor(shade, PixelColour);
-                        return PixelColour;
-                    }
-
-                    if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
-                        if(PlaneDiffuseTerm > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
-                        }
-
-                        if(PlaneDiffuseTerm2 > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
-                        }
-                        PixelColour = MultiplyScalar(PixelColour,0.125);
-                        //SetColor(shade, PixelColour);
-                        return PixelColour;
-                    }
-              }else if(pObjectList[i]->getflag() > 10  && flag != 96 && pObjectList[i]->getflag()!= 52 && pObjectList[i]->getflag() < 60){
-                     bool DoesIntersect1 = pObjectList[i]->Intersect(tmp, Direction1,
+                     bool DoesIntersect3 = pObjectList[i]->Intersect(tmp, Direction3,
                                                                   &NewDiscriminant3, &normal);
-                     bool DoesIntersect2 = pObjectList[i]->Intersect(tmp, Direction2,
+
+                     bool DoesIntersect4 = pObjectList[i]->Intersect(tmp, Direction4,
                                                                   &NewDiscriminant4, &normal);
+                     bool DoesIntersect5 = pObjectList[i]->Intersect(tmp, Direction5,
+                                                                  &NewDiscriminant5, &normal);
+                     bool DoesIntersect6 = pObjectList[i]->Intersect(tmp, Direction6,
+                                                                  &NewDiscriminant6, &normal);
+
+                     bool DoesIntersect7 = pObjectList[i]->Intersect(tmp, Direction7,
+                                                                  &NewDiscriminant7, &normal);
+                     bool DoesIntersect8 = pObjectList[i]->Intersect(tmp, Direction8,
+                                                                  &NewDiscriminant8, &normal);
+                     bool DoesIntersect9 = pObjectList[i]->Intersect(tmp, Direction9,
+                                                                  &NewDiscriminant9, &normal);
 
                     if(DoesIntersect1){  //intersect to one of the three spheres --> Blocked !
-                        if(PlaneDiffuseTerm > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
-                        }
-
-                        if(PlaneDiffuseTerm2 > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
-                        }
-                        PixelColour = MultiplyScalar(PixelColour,0.125);
-                        //SetColor(shade, PixelColour);
-                        return PixelColour;
+                        SoftShadow1 = PlaneColour;
+                        SoftShadow1 = MultiplyScalar(SoftShadow1,0.08);
+                        count++;
+                    }else{
+                        SoftShadow1 = PlaneColour;
                     }
 
-                    if(DoesIntersect2 > 0){  //intersect to one of the three spheres --> Blocked !
-                        if(PlaneDiffuseTerm > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
-                        }
+                    if(DoesIntersect2){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow2 = PlaneColour;
+                        SoftShadow2 = MultiplyScalar(SoftShadow2,0.08);
 
-                        if(PlaneDiffuseTerm2 > 0){
-                            PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
-                        }
-                        PixelColour = MultiplyScalar(PixelColour,0.125);
-                        //SetColor(shade, PixelColour);
-                       return PixelColour;
+                    }else{
+                        SoftShadow2 = PlaneColour;
                     }
-                 }
+                    if(DoesIntersect3){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow3 = PlaneColour;
+                        SoftShadow3 = MultiplyScalar(SoftShadow3,0.08);
+
+                    }else{
+                        SoftShadow3 = PlaneColour;
+                    }
+                    if(DoesIntersect4){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow4 = PlaneColour;
+                        SoftShadow4 = MultiplyScalar(SoftShadow4,0.08);
+
+                    }else{
+                        SoftShadow4 = PlaneColour;
+                    }
+                    if(DoesIntersect5){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow5 = PlaneColour;
+                        SoftShadow5 = MultiplyScalar(SoftShadow5,0.08);
+
+                    }else{
+                        SoftShadow5 = PlaneColour;
+                    }
+                    if(DoesIntersect6){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow6 = PlaneColour;
+                        SoftShadow6 = MultiplyScalar(SoftShadow6,0.08);
+
+                    }else{
+                        SoftShadow6 = PlaneColour;
+                    }
+                    if(DoesIntersect7){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow7 = PlaneColour;
+                        SoftShadow7 = MultiplyScalar(SoftShadow7,0.08);
+
+                    }else{
+                        SoftShadow7 = PlaneColour;
+                    }
+                    if(DoesIntersect8){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow8 = PlaneColour;
+                        SoftShadow8 = MultiplyScalar(SoftShadow8,0.08);
+
+                    }else{
+                        SoftShadow8 = PlaneColour;
+                    }
+                    if(DoesIntersect9){  //intersect to one of the three spheres --> Blocked !
+                        count++;
+                        SoftShadow9 = PlaneColour;
+                        SoftShadow9 = MultiplyScalar(SoftShadow9,0.08);
+
+                    }else{
+                        SoftShadow9 = PlaneColour;
+                    }
+                    if(count > 0){
+                        Vector3 returnColour = Add(Add(Add(Add(Add(Add(Add(Add(SoftShadow1,SoftShadow2),SoftShadow3),SoftShadow4),SoftShadow5),SoftShadow6),SoftShadow7),SoftShadow8),SoftShadow9);
+                        returnColour = MultiplyScalar(returnColour,1.0f/9.0f);
+                        return returnColour;
+                    }
+              }
              }
-    }
+
+        }
             /*******************************/
         if(flag > 10 && flag < 90 ){
             Pixel shade2;
@@ -235,19 +399,10 @@ public:
 
             return Colour2;
 
-            }else{
-                if(PlaneDiffuseTerm > 0){
-                    PixelColour = addcolour(flag,PlaneDiffuseTerm,PixelColour,blackOrWhite);
-                }
+            }else{ //if no shadow add colour
+                return PlaneColour;
+            }
 
-                if(PlaneDiffuseTerm2 > 0){
-                    PixelColour = addcolour(flag,PlaneDiffuseTerm2,PixelColour,blackOrWhite);
-                }
-                PixelColour = MultiplyScalar(PixelColour,0.5);
-               // SetColor(shade, PixelColour);
-
-                 return PixelColour;
-                }
         }
 
 

@@ -54,7 +54,8 @@ Vector3 randomVector(){
     float x = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
     float y = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 
-    return Vector3((x - 0.5f) / 24.0f, (y - 0.5f) / 24.0f, 0.0f);
+    return Vector3((x - 0.5f) / 32.0f, (y - 0.5f) / 32.0f, 0.0f);
+    //return Vector3(0.0f,0.0f,0.0f);
 }
 
 void RayTraceSphere(Image * pImage)
@@ -149,9 +150,9 @@ void RayTraceSphere(Image * pImage)
                  SetColor(px,ColourEdge);
                  (*pImage)(i, 1000-j) = px;  //change origin
             }else{
-                float a = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 
                 /* Jitterd */
+
                 Vector3 PixelPosition((float)i+0.5f, (float)j+0.5f, 0);
                 Vector3 PixelPosition1 = Add(Add(PixelPosition, Vector3(-0.25, -0.25, 0)),randomVector());
                 Vector3 PixelPosition2 = Add(Add(PixelPosition, Vector3(0.25, -0.25, 0)),randomVector());
@@ -171,6 +172,7 @@ void RayTraceSphere(Image * pImage)
 
                 SetColor(px,Colour);
                 (*pImage)(i, 1000-j) = px;  //change origin
+
             }
 		}
 }

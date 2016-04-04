@@ -272,7 +272,7 @@ public:
 
                     if(DoesIntersect1){  //intersect to one of the three spheres --> Blocked !
                         SoftShadow1 = PlaneColour;
-                        SoftShadow1 = MultiplyScalar(SoftShadow1,0.08);
+                        SoftShadow1 = MultiplyScalar(SoftShadow1,0.05);
                         count++;
                     }else{
                         SoftShadow1 = PlaneColour;
@@ -281,7 +281,7 @@ public:
                     if(DoesIntersect2){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow2 = PlaneColour;
-                        SoftShadow2 = MultiplyScalar(SoftShadow2,0.08);
+                        SoftShadow2 = MultiplyScalar(SoftShadow2,0.05);
 
                     }else{
                         SoftShadow2 = PlaneColour;
@@ -289,7 +289,7 @@ public:
                     if(DoesIntersect3){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow3 = PlaneColour;
-                        SoftShadow3 = MultiplyScalar(SoftShadow3,0.08);
+                        SoftShadow3 = MultiplyScalar(SoftShadow3,0.05);
 
                     }else{
                         SoftShadow3 = PlaneColour;
@@ -297,7 +297,7 @@ public:
                     if(DoesIntersect4){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow4 = PlaneColour;
-                        SoftShadow4 = MultiplyScalar(SoftShadow4,0.08);
+                        SoftShadow4 = MultiplyScalar(SoftShadow4,0.05);
 
                     }else{
                         SoftShadow4 = PlaneColour;
@@ -305,7 +305,7 @@ public:
                     if(DoesIntersect5){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow5 = PlaneColour;
-                        SoftShadow5 = MultiplyScalar(SoftShadow5,0.08);
+                        SoftShadow5 = MultiplyScalar(SoftShadow5,0.05);
 
                     }else{
                         SoftShadow5 = PlaneColour;
@@ -313,7 +313,7 @@ public:
                     if(DoesIntersect6){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow6 = PlaneColour;
-                        SoftShadow6 = MultiplyScalar(SoftShadow6,0.08);
+                        SoftShadow6 = MultiplyScalar(SoftShadow6,0.05);
 
                     }else{
                         SoftShadow6 = PlaneColour;
@@ -321,7 +321,7 @@ public:
                     if(DoesIntersect7){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow7 = PlaneColour;
-                        SoftShadow7 = MultiplyScalar(SoftShadow7,0.08);
+                        SoftShadow7 = MultiplyScalar(SoftShadow7,0.05);
 
                     }else{
                         SoftShadow7 = PlaneColour;
@@ -329,7 +329,7 @@ public:
                     if(DoesIntersect8){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow8 = PlaneColour;
-                        SoftShadow8 = MultiplyScalar(SoftShadow8,0.08);
+                        SoftShadow8 = MultiplyScalar(SoftShadow8,0.05);
 
                     }else{
                         SoftShadow8 = PlaneColour;
@@ -337,7 +337,7 @@ public:
                     if(DoesIntersect9){  //intersect to one of the three spheres --> Blocked !
                         count++;
                         SoftShadow9 = PlaneColour;
-                        SoftShadow9 = MultiplyScalar(SoftShadow9,0.08);
+                        SoftShadow9 = MultiplyScalar(SoftShadow9,0.05);
 
                     }else{
                         SoftShadow9 = PlaneColour;
@@ -404,7 +404,4 @@ public:
             }
 
         }
-
-
-
 };

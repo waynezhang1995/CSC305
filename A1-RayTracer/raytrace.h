@@ -49,19 +49,18 @@ Vector3 TraceRay(Vector3 Direction,std::vector<Object *> pObjectList){
     }
 }
 
+
 Vector3 randomVector(){
 
-    float x = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-    float y = (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+    float x = (-0.25) + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(0.25-(-0.25))));
+    float y = (-0.25) + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(0.25-(-0.25))));
 
-    return Vector3((x - 0.5f) / 32.0f, (y - 0.5f) / 32.0f, 0.0f);
-    //return Vector3(0.0f,0.0f,0.0f);
+    return Vector3(x, y, 0.0f);
 }
 
 void RayTraceSphere(Image * pImage)
 {
     std::vector<Object *> pObjectList;
-
     Sphere sphere(Vector3(200, 35,100),35,1);//radius
     Sphere sphere2(Vector3(400,45,750),45,1);//radius
     refrasphere sphereR(Vector3(800, 100, 500),100,6);//radius
@@ -154,21 +153,26 @@ void RayTraceSphere(Image * pImage)
                 /* Jitterd */
 
                 Vector3 PixelPosition((float)i+0.5f, (float)j+0.5f, 0);
-                Vector3 PixelPosition1 = Add(Add(PixelPosition, Vector3(-0.25, -0.25, 0)),randomVector());
-                Vector3 PixelPosition2 = Add(Add(PixelPosition, Vector3(0.25, -0.25, 0)),randomVector());
-                Vector3 PixelPosition3 = Add(Add(PixelPosition, Vector3(-0.25, 0.25, 0)),randomVector());
-                Vector3 PixelPosition4 = Add(Add(PixelPosition, Vector3(0.25, 0.25, 0)),randomVector());
+                //Vector3 sp[64];
+                for(int i = 0; i < 512;i += 4){
+                    Vector3 PixelPosition1 = Add(Add(PixelPosition, Vector3(-0.25, 0.25, 0)),randomVector());
+                    Vector3 PixelPosition2 = Add(Add(PixelPosition, Vector3(0.25, 0.25, 0)),randomVector());
+                    Vector3 PixelPosition3 = Add(Add(PixelPosition, Vector3(-0.25, -0.25, 0)),randomVector());
+                    Vector3 PixelPosition4 = Add(Add(PixelPosition, Vector3(0.25, -0.25, 0)),randomVector());
 
-                Vector3 Direction1 = Normalize(Minus(PixelPosition1, Camera));
-                Vector3 Direction2 = Normalize(Minus(PixelPosition2, Camera));
-                Vector3 Direction3 = Normalize(Minus(PixelPosition3, Camera));
-                Vector3 Direction4 = Normalize(Minus(PixelPosition4, Camera));
+                    Vector3 Direction1 = Normalize(Minus(PixelPosition1, Camera));
+                    Vector3 Direction2 = Normalize(Minus(PixelPosition2, Camera));
+                    Vector3 Direction3 = Normalize(Minus(PixelPosition3, Camera));
+                    Vector3 Direction4 = Normalize(Minus(PixelPosition4, Camera));
 
-                Colour = Add(Colour,TraceRay(Direction1,pObjectList));
-                Colour = Add(Colour,TraceRay(Direction2,pObjectList));
-                Colour = Add(Colour,TraceRay(Direction3,pObjectList));
-                Colour = Add(Colour,TraceRay(Direction4,pObjectList));
-                Colour = MultiplyScalar(Colour,0.25f);
+                    Colour = Add(Colour,TraceRay(Direction1,pObjectList));
+                    Colour = Add(Colour,TraceRay(Direction2,pObjectList));
+                    Colour = Add(Colour,TraceRay(Direction3,pObjectList));
+                    Colour = Add(Colour,TraceRay(Direction4,pObjectList));
+
+                }
+
+                Colour = MultiplyScalar(Colour,1.0f/512.0f);
 
                 SetColor(px,Colour);
                 (*pImage)(i, 1000-j) = px;  //change origin

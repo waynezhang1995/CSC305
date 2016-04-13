@@ -67,34 +67,23 @@ public:
         //These colours will give the sphere a red appearance
         Pixel shade;
         Vector3 LightVector = Minus(Light, Surface);
-        Vector3 LightVector2 = Minus(Light2,Surface);
         LightVector = Normalize(LightVector);
-        LightVector2 = Normalize(LightVector2);
         float DiffuseTerm = DotProduct(LightVector, Normal);
-        float DiffuseTerm2 = DotProduct(LightVector2, Normal);
         Vector3 V =Minus(Surface,Camera);
         V = Normalize(V);
         Vector3 PixelColour = AmbientColour;
+
         if (DiffuseTerm > 0)
         {
 
             Vector3 PixelDiffuseColour = MultiplyScalar(DiffuseColour, DiffuseTerm);
             PixelColour = Add(PixelColour, PixelDiffuseColour);
         }
-        if (DiffuseTerm2 > 0)
-        {
-
-            Vector3 PixelDiffuseColour = MultiplyScalar(DiffuseColour, DiffuseTerm2);
-            PixelColour = Add(PixelColour, PixelDiffuseColour);
-        }
-        PixelColour = MultiplyScalar(PixelColour,0.5); // divided by 2
-
         /* Specular component */
         Vector3 specular1 = SpecularShade(Normal,LightVector,V,PixelColour);
-        Vector3 specular2 = SpecularShade(Normal,LightVector2,V,PixelColour);
 
-        PixelColour = MultiplyScalar(Add(specular1,specular2),0.5);
-       // SetColor(shade, PixelColour);
+        PixelColour = specular1;
+
         return PixelColour;
     }
 };

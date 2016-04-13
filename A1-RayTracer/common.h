@@ -47,7 +47,9 @@ void SetColor(Pixel & px, Vector3 CalculatedColor)
 Vector3 AmbientColour(20, 20, 20);
 Vector3 DiffuseColour(124, 250, 250);
 Vector3 BackgroundColor(8, 8, 8);
-Vector3 Light(450,900,550);
+
+Vector3 Light(450.0f,900.0f,550.0f);
+/*
 Vector3 Light2(500,900,550);  //define second light source
 Vector3 Light3(550,900,550);  //define second light source
 
@@ -58,6 +60,7 @@ Vector3 Light6(550,900,500);  //define second light source
 Vector3 Light7(500,900,450);  //define second light source
 Vector3 Light8(450,900,450);  //define second light source
 Vector3 Light9(550,900,450);  //define second light source
+*/
 
 Vector3 Camera(500,500, -800);
 Vector3 SpecularColourSphere(255,255,255);
